@@ -67,10 +67,10 @@ class GridSearch(Experiment):
             "use_attentions": [False],          # Baseline
             "method": ["uniform"],              # Baseline
             "group_size": [None],               # Baseline
-            "level": ["token", "layer", "head"],# (3 options)
+            "level": ["head"],                  # MODIFIED: Test only head level first
             "symmetric": [False, True],         # (2 options)
             "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
-            "n_bits_uniform": [2, 4, 6, 8],     # (4 options) -> 3*2*3*4 = 72 combos
+            "n_bits_uniform": [2, 4, 6, 8],     # (4 options) -> Now 1*2*3*4 = 24 combos
             # --- Fixed N/A params ---
             "last_n_attentions": [None], "target_quantization_error": [None],
             "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
@@ -172,7 +172,7 @@ class GridSearch(Experiment):
 
         # --- Combine all configuration blocks ---
         all_configs = [
-            baseline_focus,    # Block 1 (~72)
+            baseline_focus,    # Block 1 (~24)
             # attn_focus,        # Block 2 (~64)
             # adaptive_focus,    # Block 3 (~54)
             # grouping_focus,    # Block 4 (~72)
@@ -204,7 +204,7 @@ class GridSearch(Experiment):
             quantizer_pairs.append((k, v))
 
         total_pairs = len(quantizer_pairs)
-        estimated_total = 72 + 64 + 54 + 72 + 96 + 108 # Recalculate estimate here
+        estimated_total = 24 + 64 + 54 + 72 + 96 + 108 # Recalculate estimate here
         print(f"Generated {total_pairs} quantizer pairs for grid search. (Estimated: {estimated_total})" )
         if total_pairs > 1000:
              print("Warning: The number of configurations is large. Grid search may take a very long time.")
