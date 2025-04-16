@@ -30,14 +30,57 @@ class Experiment(abc.ABC):
 
     @cache
     def get_model(self, worker_id: int) -> CausalLM:
+        # --- MODIFICATION START: Build max_memory map for ALL configured GPUs ---
+        full_max_memory = {}
+        # Slightly reduce available memory per GPU to leave headroom for activations/OS etc.
+        # Adjust "23GB" if needed based on observation.
+        available_gb_per_gpu = "23GB"
+        for i in range(len(device_configs)):
+            full_max_memory[i] = available_gb_per_gpu
+        # Keep large CPU memory for potential offloading
+        full_max_memory["cpu"] = "400GB" # Or get from config if it varies
+        print(f"Worker {worker_id}: Inferring device map with max_memory: {full_max_memory}")
+        # --- MODIFICATION END ---
+
         with init_empty_weights():
-            model = AutoModelForCausalLM.from_config(AutoConfig.from_pretrained(self.model_name, cache_dir=hf_cache_dir))
-        _, max_memory = device_configs[worker_id]
+            # Load config first to avoid downloading full model if only config needed
+            config = AutoConfig.from_pretrained(self.model_name, cache_dir=hf_cache_dir, trust_remote_code=True) # Added trust_remote_code
+            model = AutoModelForCausalLM.from_config(config)
+
+        # Use the full memory map for inference
+        # No need to use device_configs[worker_id] here anymore for max_memory
         model.tie_weights()
-        device_map = infer_auto_device_map(model, max_memory=max_memory, dtype=self.dtype, no_split_module_classes=model._no_split_modules)
+        device_map = infer_auto_device_map(
+            model,
+            max_memory=full_max_memory, # Use the map with all GPUs
+            dtype=self.dtype,
+            no_split_module_classes=model._no_split_modules
+        )
+        # --- Optional: Force CPU offload if map is empty or only has CPU ---
+        if not device_map or all(v in ["cpu", "disk"] for v in device_map.values()):
+             print(f"Warning: infer_auto_device_map resulted in CPU/Disk-only map: {device_map}. Forcing CPU offload map.")
+             # Fallback to a map that explicitly offloads to CPU if inference failed
+             device_map = infer_auto_device_map(
+                  model, max_memory={k:v for k,v in full_max_memory.items() if k == 'cpu'}, # Only allow CPU memory
+                  dtype=self.dtype, no_split_module_classes=model._no_split_modules, verbose=True
+             )
+
+        print(f"Worker {worker_id}: Using inferred device_map: {device_map}")
+
         if any(x == "cpu" or x == "disk" for x in device_map.values()):
-            print("Warning: CPU offloading enabled!")
-        model = AutoModelForCausalLM.from_pretrained(self.model_name, device_map=device_map, torch_dtype=self.dtype, cache_dir=hf_cache_dir).eval()
+            print(f"Worker {worker_id}: Warning: CPU/Disk offloading enabled in device map.")
+        # Load the actual pretrained model with the calculated map
+        model = AutoModelForCausalLM.from_pretrained(
+            self.model_name,
+            device_map=device_map, # Use the calculated map
+            torch_dtype=self.dtype,
+            cache_dir=hf_cache_dir,
+            trust_remote_code=True, # Added trust_remote_code
+            # attn_implementation="eager" # Keep if added previously
+        ).eval()
+        # It's generally okay for all workers to load the model using the same multi-GPU map.
+        # Accelerate handles the underlying distribution. The worker's primary device
+        # (from device_configs[worker_id][0]) is used elsewhere for placing inputs/outputs.
         return model
 
     @cached_property
