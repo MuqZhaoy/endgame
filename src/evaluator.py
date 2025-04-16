@@ -100,8 +100,27 @@ class Evaluator:
             [attn[:,:,:,:question_len].to(self.device) for attn in quantized_result.attentions],
         )
         logit_error = self._calc_tensor_error(result.logits[:,question_len:,:], quantized_result.logits)
-        key_average_size = self.key_quantizer.calc_quantized_cache_size_per_token(key_average_n_bits, model)
-        value_average_size = self.value_quantizer.calc_quantized_cache_size_per_token(value_average_n_bits, model)
+
+        # Get model dimensions for size calculation
+        num_layers = model.config.num_hidden_layers
+        num_heads = model.config.num_attention_heads
+        # Calculate embed_size_per_head, ensure integer division
+        embed_size_per_head = model.config.hidden_size // num_heads
+        if model.config.hidden_size % num_heads != 0:
+             # This shouldn't happen with standard transformer models
+             print(f"Warning: hidden_size ({model.config.hidden_size}) is not divisible by num_heads ({num_heads}). Size calculation might be inaccurate.")
+
+        # Use the new signature for calc_quantized_cache_size_per_token
+        key_average_size = self.key_quantizer.calc_quantized_cache_size_per_token(
+            num_layers=num_layers,
+            num_heads=num_heads,
+            embed_size_per_head=embed_size_per_head
+        )
+        value_average_size = self.value_quantizer.calc_quantized_cache_size_per_token(
+            num_layers=num_layers,
+            num_heads=num_heads,
+            embed_size_per_head=embed_size_per_head
+        )
         return EvaluationResult(
             accuracy=1.0 if max_choice_idx == question.answer_idx else 0.0,
             answer_log_probability=answer_log_probability,
