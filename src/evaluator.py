@@ -106,11 +106,27 @@ class Evaluator:
         # Using legacy format for now, as reconstructing a specific Cache object requires knowing its type
         # TODO: Ideally, reconstruct the same Cache type as `result.past_key_values`
         quantized_kvcache_legacy = []
-        original_device = result.past_key_values[0][0].device if isinstance(result.past_key_values, (list, tuple)) else past_key_values.key_cache[0].device
-        for idx in range(quantized_key_cache_stack.shape[0]): # Iterate through layers
+        # MODIFICATION: Ensure each layer's quantized cache is moved to the correct original device
+        is_legacy_cache = isinstance(past_key_values, (list, tuple))
+        num_layers_in_cache = len(past_key_values) if is_legacy_cache else len(past_key_values.key_cache)
+
+        if num_layers_in_cache != quantized_key_cache_stack.shape[0]:
+             # Sanity check
+             raise ValueError(f"Number of layers mismatch: original cache ({num_layers_in_cache}) vs quantized stack ({quantized_key_cache_stack.shape[0]})")
+
+        for idx in range(num_layers_in_cache): # Iterate through layers
+             # Determine the original device for this specific layer
+             if is_legacy_cache:
+                  # Assuming legacy format: ((k0, v0), (k1, v1), ...)
+                  layer_device = past_key_values[idx][0].device
+             else:
+                  # Assuming Cache object format with .key_cache list
+                  layer_device = past_key_values.key_cache[idx].device
+             
+             # Move the quantized tensors for this layer to its specific original device
              quantized_kvcache_legacy.append((
-                  quantized_key_cache_stack[idx].to(original_device),
-                  quantized_value_cache_stack[idx].to(original_device)
+                  quantized_key_cache_stack[idx].to(layer_device),
+                  quantized_value_cache_stack[idx].to(layer_device)
              ))
         # Convert the list of tuples back to a tuple of tuples if the original was a tuple
         quantized_kvcache = tuple(quantized_kvcache_legacy) if isinstance(past_key_values, tuple) else quantized_kvcache_legacy
