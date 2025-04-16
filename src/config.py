@@ -18,8 +18,10 @@ hf_cache_dir = None
 
 # 8xV100 & Llama-2-13B
 device_configs = [
-    (torch.device("cuda:0"), {0: "10GB", 1: "30GB", "cpu": "400GB"}),
-    (torch.device("cuda:2"), {2: "10GB", 3: "30GB", "cpu": "400GB"})
+    (torch.device("cuda:0"), {0: "24GB", "cpu": "480GB"}),
+    (torch.device("cuda:1"), {1: "24GB", "cpu": "480GB"}),
+    (torch.device("cuda:2"), {2: "24GB", "cpu": "480GB"}),
+    (torch.device("cuda:3"), {3: "24GB", "cpu": "480GB"}),
 ]
 
 # # 8xV100 & Llama-2-70B
