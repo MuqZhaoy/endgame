@@ -138,16 +138,16 @@ class GridSearch(Experiment):
             "method": ["uniform"],              # Baseline method
             "group_size": [32, 64, 128],        # (3 options) - Feature 2 enabled (!!! ADJUST !!!)
             "level": ["layer", "head"],         # (2 options)
-            "symmetric": [False, True],         # (2 options)
+            "symmetric": [True],         # (2 options)
             "outliers_ratio": [0.01],           # (1 option) - Reduced
             "last_n_attentions": [5],           # (1 option) - Reduced
-            "target_quantization_error": [1.0, 20.0], # (2 options)
-            "n_bits_min": [1, 4],               # (2 options)
-            "n_bits_max": [4, 8],               # (2 options)
+            "target_quantization_error": [1.0], # (1 options)
+            "n_bits_min": [4],               # (1 options)
+            "n_bits_max": [8],               # (1 options)
             "q_norm": [300],                    # (1 option)
             # --- Fixed N/A params ---
             "n_bits_uniform": [None],
-            # Combinations: 3 * 2 * 2 * 1 * 1 * 2 * 2 * 2 * 1 = 96 combos
+            # Combinations: 3 * 2 * 2 * 1 * 1 * 2 * 2 * 2 * 1 = 96 combos 
         }
 
         # Block 6: Adaptive + Grouping (Non-Attn, Adaptive enabled, Grouping enabled)
@@ -158,13 +158,13 @@ class GridSearch(Experiment):
             "method": ["adaptive"],             # Feature 1 enabled
             "group_size": [32, 64, 128],        # (3 options) - Feature 2 enabled (!!! ADJUST !!!)
             "level": ["layer", "head"],         # (2 options)
-            "symmetric": [False, True],         # (2 options)
-            "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
+            "symmetric": [True],         # (1 options)
+            "outliers_ratio": [0.05],  # (1 options)
             "n_bits_uniform": [4, 6, 8],        # (3 options) - Base bits
             # --- Fixed N/A params ---
             "last_n_attentions": [None], "target_quantization_error": [None],
             "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
-            # Combinations: 3 * 2 * 2 * 3 * 3 = 108 combos (Slightly over, acceptable)
+            # Combinations: 3 * 2 * 1 * 1 * 3 = 18 combos (Slightly over, acceptable)
         }
 
         # Note: Attn + Adaptive combination block is omitted due to likely implementation constraints.
