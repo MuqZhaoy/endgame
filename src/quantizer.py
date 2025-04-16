@@ -330,6 +330,9 @@ class Quantizer:
         
         # MODIFICATION START: Handle grouping within normalization
         original_shape = cache.shape
+        # --- ADDED: Store original device --- 
+        original_device = cache.device 
+        # --- END ADDED --- 
         if self.use_grouping:
             # Grouping assumes the input cache/mask has the original shape for the unit
             # e.g., for level=head, input shape is (embed_size_per_head,)
@@ -373,9 +376,11 @@ class Quantizer:
                  abs_max = abs_max_val
 
                  # Handle case where all values in the block/group were NaN (abs_max is -inf)
-                 abs_max = torch.where(torch.isinf(abs_max) & (abs_max < 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), abs_max) # Check for -inf specifically
+                 # MODIFIED: Use float32 and original_device
+                 abs_max = torch.where(torch.isinf(abs_max) & (abs_max < 0), torch.tensor(0.0, device=original_device, dtype=torch.float32), abs_max) # Check for -inf specifically
                  # Use max(1, ...) to avoid potential issues with n_bits=0
-                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=self.dtype, device=self.device), min=1.0)
+                 # MODIFIED: Use float32 and original_device
+                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=torch.float32, device=original_device), min=1.0)
                  scale_value = 2 * abs_max / denominator
             elif method == "std":
                  # Manual nanstd: var = nansum((x - nanmean)^2) / (N_valid - 1)
@@ -415,11 +420,14 @@ class Quantizer:
                  min_value = min_val_iter
 
                  # Handle cases where all values were NaN
-                 max_value = torch.where(torch.isinf(max_value) & (max_value < 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), max_value) # Handle -inf
-                 min_value = torch.where(torch.isinf(min_value) & (min_value > 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), min_value) # Handle +inf
+                 # MODIFIED: Use float32 and original_device
+                 max_value = torch.where(torch.isinf(max_value) & (max_value < 0), torch.tensor(0.0, device=original_device, dtype=torch.float32), max_value) # Handle -inf
+                 # MODIFIED: Use float32 and original_device
+                 min_value = torch.where(torch.isinf(min_value) & (min_value > 0), torch.tensor(0.0, device=original_device, dtype=torch.float32), min_value) # Handle +inf
 
                  # Use max(1, ...) to avoid potential issues with n_bits=0
-                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=self.dtype, device=self.device), min=1.0)
+                 # MODIFIED: Use float32 and original_device
+                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=torch.float32, device=original_device), min=1.0)
                  scale_value = (max_value - min_value) / denominator
             elif method == "std":
                  # Variance calculation uses the mean_value already calculated
@@ -428,8 +436,9 @@ class Quantizer:
 
         # Replace NaN scale/mean with defaults (e.g., 1.0 and 0.0) if all values in the group/block were outliers
         # This happens if num_valid was 0 initially.
-        scale_value = torch.nan_to_num(scale_value.to(self.dtype), nan=1.0) # Use 1.0 to avoid division by zero later
-        mean_value = torch.nan_to_num(mean_value.to(self.dtype), nan=0.0)
+        # MODIFIED: Convert scale/mean back to original dtype and device
+        scale_value = torch.nan_to_num(scale_value.to(dtype=self.dtype, device=original_device), nan=1.0) # Use 1.0 to avoid division by zero later
+        mean_value = torch.nan_to_num(mean_value.to(dtype=self.dtype, device=original_device), nan=0.0)
 
         # Ensure scale is not too small to prevent division by near-zero or large normalized values
         scale_value = torch.clamp(scale_value, min=1e-8)
