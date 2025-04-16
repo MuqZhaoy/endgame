@@ -173,8 +173,8 @@ class GridSearch(Experiment):
         # --- Combine all configuration blocks ---
         all_configs = [
             # baseline_focus,    # Block 1 (~24)
-            attn_focus,        # Block 2 (~64)
-            # adaptive_focus,    # Block 3 (~54)
+            # attn_focus,        # Block 2 (~64)
+            adaptive_focus,    # Block 3 (~54)
             # grouping_focus,    # Block 4 (~72)
             # attn_grouping,     # Block 5 (~96)
             # adaptive_grouping, # Block 6 (~108)
