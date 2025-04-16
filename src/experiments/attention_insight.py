@@ -6,6 +6,7 @@ from pathlib import Path
 from .base import Experiment
 from config import device_configs
 from matplotlib import pyplot as plt
+from functools import cached_property
 
 
 class AttentionInsight(Experiment):
