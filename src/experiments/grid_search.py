@@ -18,6 +18,7 @@ params = [
     "target_quantization_error",
     "q_norm",
     "n_bits_uniform",
+    "group_size",
 ]
 relations = [
     ("accuracy", "average_size"),
@@ -41,6 +42,7 @@ translation = {
     "target_quantization_error": "Target error",
     "q_norm": "2-norm of query tensor",
     "n_bits_uniform": "Uniform # of bits",
+    "group_size": "Group Size",
     "accuracy": "Accuracy",
     "answer_log_probability": "Answer log probability",
     "average_size": "KVcache size",
@@ -52,7 +54,7 @@ translation = {
 class GridSearch(Experiment):
     @cached_property
     def quantizer_list(self) -> list[tuple[Quantizer, Quantizer]]:
-        key_quantizers = build_quantizers([{
+        key_quantizer_configs = [{
             "key_or_value_cache": ["key"],
             "use_attentions": [False],
             "method": ["uniform"],
@@ -72,8 +74,29 @@ class GridSearch(Experiment):
             "n_bits_min": [0, 1, 2],
             "n_bits_max": [2, 3, 4],
             "q_norm": [300],
-        }])
-        value_quantizers = build_quantizers([{
+        },
+        {
+            "key_or_value_cache": ["key"],
+            "use_attentions": [False],
+            "method": ["uniform"],
+            "level": ["head"],
+            "symmetric": [False],
+            "outliers_ratio": [0.01],
+            "n_bits_uniform": [4],
+            "group_size": [32, 64, None]
+        },
+        {
+            "key_or_value_cache": ["key"],
+            "use_attentions": [False],
+            "method": ["adaptive"],
+            "level": ["head"],
+            "symmetric": [False],
+            "outliers_ratio": [0.01],
+            "n_bits_uniform": [4],
+            "group_size": [None]
+        }
+        ]
+        value_quantizer_configs = [{
             "key_or_value_cache": ["value"],
             "use_attentions": [False],
             "method": ["uniform"],
@@ -93,8 +116,55 @@ class GridSearch(Experiment):
             "n_bits_min": [0, 1, 2],
             "n_bits_max": [2, 3, 4],
             "q_norm": [None],
-        }])
-        return list(zip(key_quantizers, value_quantizers))
+        },
+        {
+            "key_or_value_cache": ["value"],
+            "use_attentions": [False],
+            "method": ["uniform"],
+            "level": ["head"],
+            "symmetric": [False],
+            "outliers_ratio": [0.01],
+            "n_bits_uniform": [4],
+            "group_size": [32, 64, None]
+        },
+        {
+            "key_or_value_cache": ["value"],
+            "use_attentions": [False],
+            "method": ["adaptive"],
+            "level": ["head"],
+            "symmetric": [False],
+            "outliers_ratio": [0.01],
+            "n_bits_uniform": [4],
+            "group_size": [None]
+        }
+        ]
+        
+        key_quantizers = build_quantizers(key_quantizer_configs)
+        value_quantizers = build_quantizers(value_quantizer_configs)
+        
+        quantizer_pairs = []
+        
+        key_q_block1 = build_quantizers([key_quantizer_configs[0]])
+        val_q_block1 = build_quantizers([value_quantizer_configs[0]])
+        for k, v in zip(key_q_block1, val_q_block1):
+             quantizer_pairs.append((k, v))
+
+        key_q_block2 = build_quantizers([key_quantizer_configs[1]])
+        val_q_block2 = build_quantizers([value_quantizer_configs[1]])
+        for k, v in zip(key_q_block2, val_q_block2):
+             quantizer_pairs.append((k, v))
+
+        grouping_key_quantizers = build_quantizers([key_quantizer_configs[2]])
+        grouping_value_quantizers = build_quantizers([value_quantizer_configs[2]])
+        for k_q, v_q in zip(grouping_key_quantizers, grouping_value_quantizers):
+             quantizer_pairs.append((k_q, v_q))
+        
+        adaptive_key_quantizers = build_quantizers([key_quantizer_configs[3]])
+        adaptive_value_quantizers = build_quantizers([value_quantizer_configs[3]])
+        for k_q, v_q in zip(adaptive_key_quantizers, adaptive_value_quantizers):
+             quantizer_pairs.append((k_q, v_q))
+             
+        return quantizer_pairs
 
     def process_result(self, results: list[EvaluationResult]):
         plt.figure(figsize=(5*len(relations), 5*2*len(params)))
