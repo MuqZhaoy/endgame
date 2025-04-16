@@ -119,8 +119,8 @@ class Evaluator:
         quantized_kvcache_for_forward.value_cache = quantized_value_list_on_device
         # Estimate seen_tokens based on the shape of the quantized cache if original was tuple
         # Note: This assumes batch size is 1, might need adjustment otherwise
-        estimated_seen_tokens = quantized_key_cache_stack.shape[3] if not is_cache_object else original_seen_tokens
-        quantized_kvcache_for_forward.seen_tokens = estimated_seen_tokens 
+        # estimated_seen_tokens = quantized_key_cache_stack.shape[3] if not is_cache_object else original_seen_tokens
+        # quantized_kvcache_for_forward.seen_tokens = estimated_seen_tokens # REMOVED: Causes AttributeError
             
         # If original was a StaticCache or similar with scale_idx, copy it (best effort)
         if is_cache_object and original_scale_idx is not None and hasattr(quantized_kvcache_for_forward, 'scale_idx'):
