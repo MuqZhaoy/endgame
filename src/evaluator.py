@@ -103,40 +103,31 @@ class Evaluator:
         quantized_key_cache_stack, key_average_n_bits = self.key_quantizer.quantize(key_cache, question_attentions)
         quantized_value_cache_stack, value_average_n_bits = self.value_quantizer.quantize(value_cache, question_attentions)
 
-        # --- Reconstruct the cache in the ORIGINAL format (Cache or Tuple) --- 
-        quantized_kvcache_for_forward = None
+        # --- Reconstruct the cache ALWAYS as a DynamicCache object --- 
+        quantized_kvcache_for_forward = DynamicCache() # Force creation of DynamicCache
         if num_layers_in_cache != quantized_key_cache_stack.shape[0]:
              raise ValueError(f"Layer count mismatch during reconstruction: {num_layers_in_cache} vs {quantized_key_cache_stack.shape[0]}")
 
-        if is_cache_object:
-            # Reconstruct a Cache object
-            quantized_cache = original_cache_type() 
-            quantized_key_list_on_device = []
-            quantized_value_list_on_device = []
-            for idx in range(num_layers_in_cache):
-                 layer_device = original_devices[idx]
-                 quantized_key_list_on_device.append(quantized_key_cache_stack[idx].to(layer_device))
-                 quantized_value_list_on_device.append(quantized_value_cache_stack[idx].to(layer_device))
-            quantized_cache.key_cache = quantized_key_list_on_device
-            quantized_cache.value_cache = quantized_value_list_on_device
-            quantized_cache.seen_tokens = original_seen_tokens
-            if original_scale_idx is not None and hasattr(quantized_cache, 'scale_idx'):
-                 quantized_cache.scale_idx = original_scale_idx
-            quantized_kvcache_for_forward = quantized_cache
-        else:
-            # Reconstruct a tuple of tuples
-            quantized_kvcache_legacy = []
-            for idx in range(num_layers_in_cache):
-                 layer_device = original_devices[idx]
-                 quantized_kvcache_legacy.append((
-                      quantized_key_cache_stack[idx].to(layer_device),
-                      quantized_value_cache_stack[idx].to(layer_device)
-                 ))
-            # Ensure final type matches original (tuple or list)
-            quantized_kvcache_for_forward = type(past_key_values)(quantized_kvcache_legacy) 
+        quantized_key_list_on_device = []
+        quantized_value_list_on_device = []
+        for idx in range(num_layers_in_cache):
+             layer_device = original_devices[idx]
+             quantized_key_list_on_device.append(quantized_key_cache_stack[idx].to(layer_device))
+             quantized_value_list_on_device.append(quantized_value_cache_stack[idx].to(layer_device))
+            
+        quantized_kvcache_for_forward.key_cache = quantized_key_list_on_device
+        quantized_kvcache_for_forward.value_cache = quantized_value_list_on_device
+        # Estimate seen_tokens based on the shape of the quantized cache if original was tuple
+        # Note: This assumes batch size is 1, might need adjustment otherwise
+        estimated_seen_tokens = quantized_key_cache_stack.shape[3] if not is_cache_object else original_seen_tokens
+        quantized_kvcache_for_forward.seen_tokens = estimated_seen_tokens 
+            
+        # If original was a StaticCache or similar with scale_idx, copy it (best effort)
+        if is_cache_object and original_scale_idx is not None and hasattr(quantized_kvcache_for_forward, 'scale_idx'):
+             quantized_kvcache_for_forward.scale_idx = original_scale_idx
         # --- End Cache Reconstruction --- 
 
-        # Forward after quantization using the reconstructed kv cache (in original format)
+        # Forward after quantization using the reconstructed DynamicCache object
         quantized_result = model.forward(input_ids[:,question_len:], past_key_values=quantized_kvcache_for_forward, use_cache=True, output_attentions=True, return_dict=True)
         # Calculate log probabilities
         first_word_log_softmax = F.log_softmax(result.logits[:,question_len-1], dim=-1)
