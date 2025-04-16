@@ -622,25 +622,35 @@ class Quantizer:
 
             if valid_data.numel() == 0:
                 # Handle empty slice
-                boundaries = torch.zeros(num_quantiles + 1, device=self.device, dtype=self.dtype)
+                # MODIFIED: Create 1D boundaries
+                boundaries_1d = torch.zeros(num_quantiles + 1, device=self.device, dtype=torch.float32)
             else:
-                boundaries = torch.quantile(
-                    valid_data,
-                    quantile_points,
+                # MODIFIED: Calculate 1D boundaries from flattened valid data
+                boundaries_1d = torch.quantile(
+                    valid_data.flatten(), # Use flattened data
+                    quantile_points, # quantile_points should be float32
                     interpolation='linear'
                 )
+            # boundaries is now 1D: shape (num_quantiles + 1,)
+            boundaries = boundaries_1d 
             # Reshape boundaries for broadcasting consistency later (e.g., (1, 1, ..., num_quantiles + 1))
-            boundaries = boundaries.view((1,) * normalized_cache.dim() + (num_quantiles + 1,))
+            # boundaries = boundaries.view((1,) * normalized_cache.dim() + (num_quantiles + 1,)) <-- REMOVED unnecessary view
 
         # Step 4: Calculate Centroids (Midpoints of boundaries)
-        centroids = (boundaries[..., :-1] + boundaries[..., 1:]) / 2.0
+        # MODIFIED: Use 1D boundaries
+        centroids_1d = (boundaries[:-1] + boundaries[1:]) / 2.0
         # Handle cases where boundaries are equal (results in NaN centroid) - replace with boundary value
-        centroids = torch.where(torch.isnan(centroids), boundaries[..., :-1], centroids)
+        centroids_1d = torch.where(torch.isnan(centroids_1d), boundaries[:-1], centroids_1d)
+        # Centroids is now 1D: shape (num_quantiles,)
+        centroids = centroids_1d
         # Centroids shape: (..., num_groups, num_quantiles) or (1, ..., 1, num_quantiles)
 
         # Step 5: Quantize (Find bin index for each value)
         # Use searchsorted on the upper boundaries (excluding the lowest boundary, effectively -inf)
-        upper_boundaries = boundaries[..., 1:].contiguous() # Shape (..., num_q+1) -> (..., num_q)
+        # MODIFIED: Use 1D upper boundaries
+        upper_boundaries_1d = boundaries[1:].contiguous() # Shape (num_quantiles,)
+        upper_boundaries = upper_boundaries_1d
+        # upper_boundaries = boundaries[..., 1:].contiguous() # Shape (..., num_q+1) -> (..., num_q)
 
         # Apply searchsorted. Needs careful broadcasting if grouping.
         if self.use_grouping:
@@ -674,19 +684,26 @@ class Quantizer:
             # Ensure upper_boundaries has a compatible shape for broadcasting with normalized_cache
             # upper_boundaries: (1, ..., 1, num_quantiles)
             # normalized_cache: (...) original slice shape
-            search_boundaries = upper_boundaries # Shape (1, ..., 1, num_quantiles)
-            search_values = normalized_cache.unsqueeze(-1) # Add dim for comparison: (..., 1)
+            # search_boundaries = upper_boundaries # Shape (1, ..., 1, num_quantiles)
+            # search_values = normalized_cache.unsqueeze(-1) # Add dim for comparison: (..., 1)
             
             # Perform broadcasted comparison (searchsorted handles this)
             # Need boundaries on the dim being searched. Let's ensure boundary dim is last.
+            # quantized_indices = torch.searchsorted(search_boundaries, search_values, right=True)
+            
+            # MODIFIED: Use 1D boundaries for searchsorted, broadcasting should work correctly.
+            search_boundaries = upper_boundaries_1d # Use the 1D boundaries
+            search_values = normalized_cache # Use the original multi-dim cache
             quantized_indices = torch.searchsorted(search_boundaries, search_values, right=True)
-            quantized_indices = quantized_indices.squeeze(-1) # Remove added dimension
+            # quantized_indices = quantized_indices.squeeze(-1) # Remove added dimension <-- No longer needed
             # Clamp indices
             quantized_indices = torch.clamp(quantized_indices, 0, num_quantiles - 1)
 
         # Step 6: Dequantize (Gather Centroids based on indices)
         # Need indices shape to align with centroids shape for gather
         # Centroids shape: (..., num_groups, num_quantiles) or (1, ..., 1, num_quantiles)
+        # MODIFIED: Use 1D centroids
+        centroids_to_gather = centroids # Use 1D centroids
         # Indices shape: (..., num_groups, group_size) or (...)
         
         if self.use_grouping:
@@ -715,12 +732,16 @@ class Quantizer:
         else: # No grouping
              # Centroids shape (1,...,1, N), indices shape (...)
              # We need to gather along the last dimension of centroids using indices
-             target_gather_shape = quantized_indices.shape + (num_quantiles,)
-             broadcasted_centroids = centroids.expand(target_gather_shape)
-             quantized_indices_unsqueezed = quantized_indices.unsqueeze(-1) # Add dim for index
-             
-             dequantized_cache = torch.gather(broadcasted_centroids, -1, quantized_indices_unsqueezed)
-             dequantized_cache = dequantized_cache.squeeze(-1) # Remove added dimension
+             # target_gather_shape = quantized_indices.shape + (num_quantiles,)
+             # broadcasted_centroids = centroids.expand(target_gather_shape)
+             # quantized_indices_unsqueezed = quantized_indices.unsqueeze(-1) # Add dim for index
+             # 
+             # dequantized_cache = torch.gather(broadcasted_centroids, -1, quantized_indices_unsqueezed)
+             # dequantized_cache = dequantized_cache.squeeze(-1) # Remove added dimension
+
+             # MODIFIED: Gather from 1D centroids using multi-dim indices
+             # Ensure centroids are contiguous if needed by gather
+             dequantized_cache = centroids_to_gather.contiguous()[quantized_indices]
 
         # Ensure dequantized cache has the same dtype as normalization outputs
         # --- MODIFIED: Convert to self.dtype BEFORE denormalization --- 
