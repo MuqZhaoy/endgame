@@ -69,15 +69,54 @@ class Evaluator:
         result = model.forward(input_ids, use_cache=True, output_attentions=True, return_dict=True)
         # Quantize key/value cache
         question_attentions = [attn[:,:,:question_len,:question_len].to(self.device) for attn in result.attentions]
-        key_cache = torch.stack([key[:,:,:question_len,:].to(self.device) for key, _ in result.past_key_values])
-        value_cache = torch.stack([value[:,:,:question_len,:].to(self.device) for _, value in result.past_key_values])
-        quantized_key_cache, key_average_n_bits = self.key_quantizer.quantize(key_cache, question_attentions)
-        quantized_value_cache, value_average_n_bits = self.value_quantizer.quantize(value_cache, question_attentions)
-        quantized_kvcache = [
-            (key.to(result.past_key_values[idx][0].device), value.to(result.past_key_values[idx][0].device))
-            for idx, (key, value) in enumerate(zip(quantized_key_cache, quantized_value_cache))
-        ]
-        # Forward after quantization
+        
+        # MODIFICATION START: Handle modern Cache object format
+        past_key_values = result.past_key_values # This might be a Cache object or legacy tuple
+        key_cache_list = []
+        value_cache_list = []
+        
+        if hasattr(past_key_values, 'key_cache') and hasattr(past_key_values, 'value_cache'): # Heuristic check for Cache object
+             # Assuming structure like DynamicCache where key_cache/value_cache are lists of tensors per layer
+             for k_layer, v_layer in zip(past_key_values.key_cache, past_key_values.value_cache):
+                  key_cache_list.append(k_layer[:,:,:question_len,:].to(self.device))
+                  value_cache_list.append(v_layer[:,:,:question_len,:].to(self.device))
+        elif isinstance(past_key_values, (list, tuple)): # Handle legacy tuple/list format
+             for key, value in past_key_values:
+                  key_cache_list.append(key[:,:,:question_len,:].to(self.device))
+                  value_cache_list.append(value[:,:,:question_len,:].to(self.device))
+        else:
+             raise TypeError(f"Unsupported past_key_values format: {type(past_key_values)}")
+             
+        key_cache = torch.stack(key_cache_list) # Shape (L, B, H, S_kv, E)
+        value_cache = torch.stack(value_cache_list) # Shape (L, B, H, S_kv, E)
+        # Note: Quantizer expects (B, S, L, H, E), need to handle potential shape mismatch if quantizer expects permuted input
+        # Let's assume quantizer.quantize now correctly handles (L, B, H, S, E) input based on previous fixes.
+        # If not, permute here before passing to quantizer.
+        # key_cache = key_cache.permute(1, 3, 0, 2, 4) # B, S, L, H, E
+        # value_cache = value_cache.permute(1, 3, 0, 2, 4) # B, S, L, H, E
+
+        quantized_key_cache_stack, key_average_n_bits = self.key_quantizer.quantize(key_cache, question_attentions)
+        quantized_value_cache_stack, value_average_n_bits = self.value_quantizer.quantize(value_cache, question_attentions)
+
+        # If quantizer returned permuted shape, permute back before creating cache
+        # quantized_key_cache_stack = quantized_key_cache_stack.permute(2, 0, 3, 1, 4) # L, B, H, S, E
+        # quantized_value_cache_stack = quantized_value_cache_stack.permute(2, 0, 3, 1, 4) # L, B, H, S, E
+        
+        # Create the past_key_values in the expected format for the second forward pass
+        # Using legacy format for now, as reconstructing a specific Cache object requires knowing its type
+        # TODO: Ideally, reconstruct the same Cache type as `result.past_key_values`
+        quantized_kvcache_legacy = []
+        original_device = result.past_key_values[0][0].device if isinstance(result.past_key_values, (list, tuple)) else past_key_values.key_cache[0].device
+        for idx in range(quantized_key_cache_stack.shape[0]): # Iterate through layers
+             quantized_kvcache_legacy.append((
+                  quantized_key_cache_stack[idx].to(original_device),
+                  quantized_value_cache_stack[idx].to(original_device)
+             ))
+        # Convert the list of tuples back to a tuple of tuples if the original was a tuple
+        quantized_kvcache = tuple(quantized_kvcache_legacy) if isinstance(past_key_values, tuple) else quantized_kvcache_legacy
+        # MODIFICATION END
+
+        # Forward after quantization using the reconstructed kv cache
         quantized_result = model.forward(input_ids[:,question_len:], past_key_values=quantized_kvcache, use_cache=True, output_attentions=True, return_dict=True)
         # Calculate log probabilities
         first_word_log_softmax = F.log_softmax(result.logits[:,question_len-1], dim=-1)
@@ -93,8 +132,8 @@ class Evaluator:
                 max_log_probability = quantized_log_probability
                 max_choice_idx = choice_idx
         # Calculate quantization metrics
-        key_quantization_error = self._calc_tensor_error(key_cache, quantized_key_cache)
-        value_quantization_error = self._calc_tensor_error(value_cache, quantized_value_cache)
+        key_quantization_error = self._calc_tensor_error(key_cache, quantized_key_cache_stack)
+        value_quantization_error = self._calc_tensor_error(value_cache, quantized_value_cache_stack)
         attention_error = self._calc_attention_error(
             [attn[:,:,question_len:,:question_len].to(self.device) for attn in result.attentions],
             [attn[:,:,:,:question_len].to(self.device) for attn in quantized_result.attentions],

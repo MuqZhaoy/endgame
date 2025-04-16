@@ -10,6 +10,7 @@ from multiprocessing import queues, Queue, Lock, Process
 from accelerate import init_empty_weights, infer_auto_device_map
 from config import version, cache_file, hf_cache_dir, device_configs
 from transformers import AutoModelForCausalLM, AutoConfig, AutoTokenizer
+import os
 
 
 class Experiment(abc.ABC):
@@ -63,6 +64,15 @@ class Experiment(abc.ABC):
         if result is None:
             model = self.get_model(worker_id)
             result = evaluator.evaluate(model, use_tqdm=True)
+            # MODIFICATION START: Ensure cache directory exists before writing
+            if cache_file:
+                try:
+                    cache_dir = os.path.dirname(cache_file)
+                    if cache_dir: # Avoid trying to create empty dir if cache_file is just a filename
+                        os.makedirs(cache_dir, exist_ok=True)
+                except OSError as e:
+                    print(f"Warning: Could not create cache directory '{cache_dir}': {e}")
+            # MODIFICATION END
             with file_lock:
                 evaluator.cache_result(cache_file, result)
         if self.verbose:
