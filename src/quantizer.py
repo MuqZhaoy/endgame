@@ -690,60 +690,364 @@ class Quantizer:
     # MODIFICATION END
         
     # Returns (quantized kvcache, average n_bits)
+    def quantize(self, cache: torch.Tensor, attentions: Optional[AttentionType] = None) -> tuple[torch.Tensor, float]:
+        """
+        Applies quantization to the input cache tensor based on the quantizer's configuration.
+
+        Args:
+            cache: The input tensor to quantize (e.g., key or value cache).
+                   Expected Shape: (n_batch, seq_len, n_layer, n_head, embed_size_per_head)
+            attentions: Optional list of attention tensors, required if use_attentions=True
+                        and key_or_value_cache='value'. List contains tensors of shape
+                        (n_batch, n_head, query_len, key_len) for each layer.
+
+        Returns:
+            A tuple containing:
+            - quantized_cache: The cache after applying quantization and dequantization.
+                               Has the same shape as the input cache.
+            - average_n_bits: The average number of bits used per quantized value.
+                              Returns float representation of bits (e.g., 16.0 for float16)
+                              if level is 'no-quantization'.
+        """
+        if self.level == "no-quantization":
+            # Return original cache and full precision bits
+            return cache, float(torch.finfo(self.dtype).bits)
+
+        # 1. Calculate outlier mask
+        # Ensure cache has the expected 5D shape
+        expected_dims = 5
+        if cache.dim() != expected_dims:
+             raise ValueError(f"Input cache to quantize has unexpected shape {cache.shape}. Expected {expected_dims} dimensions (B, S, L, H, E).")
+
+        outlier_mask = self._calc_outlier_mask(cache)
+        # outlier_mask shape: (n_batch, seq_len, n_layer, n_head, embed_size_per_head)
+
+        # 2. Determine quantization bits and calculate average
+        n_bits_tensor: Optional[torch.Tensor] = None # Tensor holding bits per block if attention-aware
+        n_bits_fixed: int = 0 # Fixed bits if not attention-aware
+        average_n_bits: float
+
+        if self.use_attentions:
+            # Calculate bits dynamically based on attentions
+            if self.key_or_value_cache == "value" and attentions is None:
+                raise ValueError("Attentions must be provided for attention-aware value quantization.")
+            
+            # n_bits_tensor shape depends on level, e.g., (B, S, L, H) for head level
+            n_bits_tensor = self._calc_quantization_bits(attentions, cache, outlier_mask)
+
+            # Check outliers across the quantization dimensions themselves, not the features within the block
+            # Example: for level=head, check if the mask slice for a head [b,s,l,h,:] has *any* True values
+            # We need to derive the block_mask shape from n_bits_tensor shape.
+            outlier_block_mask = None
+            try:
+                if n_bits_tensor is not None:
+                    block_mask_shape = n_bits_tensor.shape
+                    # Determine axes to check for outliers based on level
+                    # These are the dimensions *within* the block that are not represented in n_bits_tensor shape
+                    original_dims = tuple(range(cache.dim())) # (0, 1, 2, 3, 4) for (B, S, L, H, E)
+                    bit_tensor_dims = tuple(range(n_bits_tensor.dim())) # e.g., (0, 1, 2, 3) for head level
+                    outlier_check_dims = tuple(d for d in original_dims if d not in bit_tensor_dims and d >= min(bit_tensor_dims))
+                    
+                    # Check for outliers along these dimensions
+                    temp_mask = outlier_mask
+                    if outlier_check_dims:
+                         for dim_to_check in sorted(outlier_check_dims, reverse=True):
+                              if temp_mask.dim() > n_bits_tensor.dim(): # Only reduce if dim exists
+                                   temp_mask = temp_mask.any(dim=dim_to_check)
+                    
+                    # Ensure final shape matches n_bits_tensor
+                    if temp_mask.shape == n_bits_tensor.shape:
+                         outlier_block_mask = temp_mask
+                    else:
+                        print(f"Warning: Derived outlier_block_mask shape {temp_mask.shape} != n_bits_tensor shape {n_bits_tensor.shape}. Using simple mean for average bits.")
+                        # Fallback or handle error - setting mask to None will trigger fallback below
+            except Exception as e:
+                 print(f"Warning: Error deriving outlier_block_mask: {e}. Using simple mean for average bits.")
+
+            # Calculate average bits using the derived mask if available
+            if n_bits_tensor is not None and outlier_block_mask is not None:
+                valid_bits = n_bits_tensor[~outlier_block_mask] # Select bits corresponding to non-outlier blocks
+                if valid_bits.numel() > 0:
+                     # Calculate mean based on valid bits, then factor in outlier bits (full precision)
+                     mean_valid_bits = valid_bits.float().mean().item()
+                     num_total_blocks = n_bits_tensor.numel()
+                     num_valid_blocks = valid_bits.numel()
+                     outlier_ratio_blocks = (num_total_blocks - num_valid_blocks) / num_total_blocks if num_total_blocks > 0 else 0.0
+                     average_n_bits = mean_valid_bits * (1.0 - outlier_ratio_blocks) + float(torch.finfo(self.dtype).bits) * outlier_ratio_blocks
+                else: # Handle case where all blocks might be outliers or tensor is empty
+                     average_n_bits = float(torch.finfo(self.dtype).bits) # All outliers treated as full precision
+            elif n_bits_tensor is not None: # Fallback if mask derivation failed
+                 average_n_bits = n_bits_tensor.float().mean().item() # Simple mean as fallback
+                 print("Warning: Using simple mean for average_n_bits due to outlier mask issue.")
+            else: # Should only happen if not use_attentions, handled in else block below
+                 average_n_bits = float(torch.finfo(self.dtype).bits) # Default, should be overridden
+
+        else:
+            # Use uniform bits
+            n_bits_fixed = self.n_bits_uniform
+            # Average bits considers outliers (full precision)
+            average_n_bits = float(n_bits_fixed) * (1.0 - self.outliers_ratio) + float(torch.finfo(self.dtype).bits) * self.outliers_ratio
+
+        # 3. Apply the selected quantization method by iterating through blocks
+        quantized_cache = cache.clone()
+
+        # --- Iteration Logic based on Quantization Level ---
+        if self.level == "head":
+            n_batch, seq_len, n_layer, n_head, _ = cache.shape
+            for b in range(n_batch):
+                for s in range(seq_len):
+                    for l in range(n_layer):
+                        for h in range(n_head):
+                            cache_slice = cache[b, s, l, h, :]
+                            mask_slice = outlier_mask[b, s, l, h, :]
+                            
+                            # Determine the n_bits for this specific head
+                            current_n_bits: int
+                            if self.use_attentions:
+                                 assert n_bits_tensor is not None
+                                 # Extract the bit value for this specific index
+                                 try:
+                                     bit_val_tensor = n_bits_tensor[b, s, l, h]
+                                     if bit_val_tensor.numel() != 1:
+                                         raise ValueError(f"Expected scalar tensor at index [{b},{s},{l},{h}], got shape {bit_val_tensor.shape}")
+                                     current_n_bits = bit_val_tensor.item()
+                                 except IndexError:
+                                     print(f"Error: Index [{b},{s},{l},{h}] out of bounds for n_bits_tensor with shape {n_bits_tensor.shape}.")
+                                     current_n_bits = self.n_bits_max # Fallback
+                                 except ValueError as e:
+                                     print(f"Warning: {e}. Using n_bits_max as fallback.")
+                                     current_n_bits = self.n_bits_max # Fallback
+                            else:
+                                current_n_bits = n_bits_fixed
+
+                            # Skip quantization if n_bits is 0 for methods that don't support it
+                            apply_quant = True
+                            if self.method_name in ["uniform", "normal"] and current_n_bits == 0:
+                                apply_quant = False # Leave original cache slice
+
+                            if apply_quant:
+                                 quantized_slice = self.quantization_method(cache_slice, current_n_bits, mask_slice)
+                                 quantized_cache[b, s, l, h, :] = quantized_slice
+
+        elif self.level == "layer":
+             n_batch, seq_len, n_layer, _, _ = cache.shape
+             for b in range(n_batch):
+                 for s in range(seq_len):
+                     for l in range(n_layer):
+                         cache_slice = cache[b, s, l, :, :] # Shape (n_head, embed_size)
+                         mask_slice = outlier_mask[b, s, l, :, :]
+                         current_n_bits: int
+                         if self.use_attentions:
+                             assert n_bits_tensor is not None
+                             try:
+                                 bit_val_tensor = n_bits_tensor[b, s, l]
+                                 if bit_val_tensor.numel() != 1:
+                                     raise ValueError(f"Expected scalar tensor at index [{b},{s},{l}], got shape {bit_val_tensor.shape}")
+                                 current_n_bits = bit_val_tensor.item()
+                             except IndexError:
+                                 print(f"Error: Index [{b},{s},{l}] out of bounds for n_bits_tensor with shape {n_bits_tensor.shape}.")
+                                 current_n_bits = self.n_bits_max # Fallback
+                             except ValueError as e:
+                                     print(f"Warning: {e}. Using n_bits_max as fallback.")
+                                     current_n_bits = self.n_bits_max # Fallback
+                         else:
+                             current_n_bits = n_bits_fixed
+                         
+                         apply_quant = True
+                         if self.method_name in ["uniform", "normal"] and current_n_bits == 0:
+                             apply_quant = False
+
+                         if apply_quant:
+                              quantized_slice = self.quantization_method(cache_slice, current_n_bits, mask_slice)
+                              quantized_cache[b, s, l, :, :] = quantized_slice
+
+        elif self.level == "token":
+             n_batch, seq_len, _, _, _ = cache.shape
+             for b in range(n_batch):
+                 for s in range(seq_len):
+                     cache_slice = cache[b, s, :, :, :] # Shape (n_layer, n_head, embed_size)
+                     mask_slice = outlier_mask[b, s, :, :, :]
+                     current_n_bits: int
+                     if self.use_attentions:
+                         assert n_bits_tensor is not None
+                         try:
+                             bit_val_tensor = n_bits_tensor[b, s]
+                             if bit_val_tensor.numel() != 1:
+                                 raise ValueError(f"Expected scalar tensor at index [{b},{s}], got shape {bit_val_tensor.shape}")
+                             current_n_bits = bit_val_tensor.item()
+                         except IndexError:
+                             print(f"Error: Index [{b},{s}] out of bounds for n_bits_tensor with shape {n_bits_tensor.shape}.")
+                             current_n_bits = self.n_bits_max # Fallback
+                         except ValueError as e:
+                                print(f"Warning: {e}. Using n_bits_max as fallback.")
+                                current_n_bits = self.n_bits_max # Fallback
+                     else:
+                         current_n_bits = n_bits_fixed
+
+                     apply_quant = True
+                     if self.method_name in ["uniform", "normal"] and current_n_bits == 0:
+                         apply_quant = False
+
+                     if apply_quant:
+                          quantized_slice = self.quantization_method(cache_slice, current_n_bits, mask_slice)
+                          quantized_cache[b, s, :, :, :] = quantized_slice
+        else:
+            # Should not happen if level is validated
+            raise RuntimeError(f"Unexpected quantization level: {self.level}")
+
+        # --- End Iteration Logic ---
+
+        # 4. Return results (quantized_cache already holds the processed data)
+        return quantized_cache, average_n_bits
+
+    # MODIFICATION START: Add helper methods for grouping reshape if they don't exist
+    # Check if these methods already exist, otherwise add them.
+    # They seem to be used by _normalize, _denormalize, _adaptive_quantize, _calc_outlier_mask
+    
+    def _reshape_for_grouping(self, tensor: torch.Tensor) -> torch.Tensor:
+        """Reshapes the last dimension for grouping."""
+        if not self.use_grouping:
+            # If called without grouping, return tensor as is or raise error?
+            # Let's return as is, assuming caller checks use_grouping if necessary.
+            return tensor 
+        
+        original_shape = tensor.shape
+        embed_dim = original_shape[-1]
+        
+        if self.group_size <= 0:
+             raise ValueError("group_size must be positive for grouping reshape.")
+
+        if embed_dim % self.group_size != 0:
+             # This check might be redundant if already validated in __init__ based on expected embed dim
+             raise ValueError(f"Tensor last dimension ({embed_dim}) not divisible by group_size ({self.group_size}) in _reshape_for_grouping")
+        
+        num_groups = embed_dim // self.group_size
+        # Handle case where tensor might be less than 2D (e.g. just embed_dim)
+        if len(original_shape) == 1:
+            new_shape = (num_groups, self.group_size)
+        else:
+            new_shape = original_shape[:-1] + (num_groups, self.group_size)
+        
+        return tensor.reshape(*new_shape) # Use reshape instead of view for safety with potential copies
+
+    def _reshape_from_grouping(self, tensor_grouped: torch.Tensor) -> torch.Tensor:
+        """Reshapes a grouped tensor back to its original last dimension."""
+        if not self.use_grouping:
+             # If called without grouping, return tensor as is.
+             return tensor_grouped
+
+        grouped_shape = tensor_grouped.shape
+        if len(grouped_shape) < 2:
+             # Need at least (num_groups, group_size) dimensions
+             raise ValueError(f"Grouped tensor must have at least 2 dimensions. Shape: {grouped_shape}")
+
+        num_groups = grouped_shape[-2]
+        group_size_in_tensor = grouped_shape[-1]
+
+        # We expect group_size_in_tensor to match self.group_size
+        if group_size_in_tensor != self.group_size:
+             # Allow flexibility? Or enforce strict match? Let's enforce for now.
+             raise ValueError(f"Tensor's last dim ({group_size_in_tensor}) doesn't match self.group_size ({self.group_size}) in _reshape_from_grouping.")
+
+        original_last_dim = num_groups * group_size_in_tensor
+        # Handle case where input was 1D originally (reshaped to 2D)
+        if len(grouped_shape) == 2: # Shape was (num_groups, group_size)
+            original_shape = (original_last_dim,)
+        else: # Original tensor had more leading dimensions
+            original_shape = grouped_shape[:-2] + (original_last_dim,)
+
+        # Use reshape, contiguous might be necessary if view fails after certain ops
+        return tensor_grouped.contiguous().reshape(*original_shape)
+    # MODIFICATION END
+
+
+    def calc_quantized_cache_size_per_token(self, num_layers: int, num_heads: int, embed_size_per_head: int) -> float:
+        # cache.shape: (n_batch, seq_len, n_layer, n_head, embed_size_per_head)
+        # Calculates estimated size PER TOKEN based on configuration.
+        
+        # Determine total number of values per token across layers, heads, embed dim
+        num_values_per_token = float(num_layers * num_heads * embed_size_per_head)
+
+        # Estimate average data bits per value based on configuration
+        # Note: For attention-aware, this is an ESTIMATE using n_bits_max.
+        # Actual average bits depend on runtime calculation in quantize().
+        data_bits_per_value: float
+        if self.level == "no-quantization":
+            data_bits_per_value = float(torch.finfo(self.dtype).bits)
+        elif self.use_attentions:
+            # Use n_bits_max as a conservative estimate for storage size.
+            # Actual average bit rate might be lower.
+            data_bits_per_value = float(self.n_bits_max)
+            # Add comment about estimation accuracy?
+        else:
+             # Use the fixed uniform bits
+             data_bits_per_value = float(self.n_bits_uniform)
+        
+        # Estimate total data bits per token (before considering outliers)
+        estimated_data_bits = num_values_per_token * data_bits_per_value
+
+        # Adjust total bits considering outliers (which use full precision)
+        # Use self.outliers_ratio as the best available estimate here
+        # This assumes outlier ratio is uniform across all values
+        final_data_bits = estimated_data_bits * (1.0 - self.outliers_ratio) + \
+                           (num_values_per_token * float(torch.finfo(self.dtype).bits)) * self.outliers_ratio
+
+        # Calculate overhead bits (for scale/mean parameters) per token
+        overhead_bits = 0.0
         if self.level != "no-quantization":
-             default_param_bits = float(torch.finfo(self.dtype).bits) # Bits for storing scale/mean (e.g., 16 for float16)
-             # Number of parameters (scale, mean/zero-point) per quantization block
-             n_params_per_block = 1.0 if self.symmetric else 2.0 # Scale + Mean/Zero-point
+            default_param_bits = float(torch.finfo(self.dtype).bits) # Bits for storing scale/mean (e.g., 16 for float16)
+            # Number of parameters (scale, mean/zero-point) per quantization block
+            n_params_per_block = 1.0 if self.symmetric else 2.0 # Scale + Mean/Zero-point
              
-             num_quant_blocks = 0.0 # Total number of blocks requiring separate parameters per token
+            num_quant_blocks = 0.0 # Total number of blocks requiring separate parameters per token
 
-             # Determine the number of base quantization blocks based on the level
-             if self.level == "token":
-                 num_base_blocks = 1.0
-             elif self.level == "layer":
-                 num_base_blocks = float(num_layers)
-             elif self.level == "head":
-                 num_base_blocks = float(num_layers * num_heads)
-             else: # Should not happen due to Literal type check
-                 num_base_blocks = 0.0 
+            # Determine the number of base quantization blocks based on the level
+            if self.level == "token":
+                num_base_blocks = 1.0
+            elif self.level == "layer":
+                num_base_blocks = float(num_layers)
+            elif self.level == "head":
+                num_base_blocks = float(num_layers * num_heads)
+            else: # Should not happen due to Literal type check
+                num_base_blocks = 0.0 
 
-             # If grouping is enabled, multiply base blocks by the number of feature groups within each block
-             if self.use_grouping:
-                  # Ensure group_size is valid and compatible
-                  if self.group_size <= 0:
-                      raise ValueError("group_size must be positive when use_grouping is True.")
-                  if embed_size_per_head % self.group_size != 0:
-                       raise ValueError(
-                           f"Embed size per head ({embed_size_per_head}) not divisible by group_size ({self.group_size}) "
-                           f"in size calculation (Level: {self.level})"
-                       )
-                  num_feature_groups_per_embed = embed_size_per_head // self.group_size
-                  
-                  # Adjust the number of blocks based on the level and feature groups
-                  if self.level == "token":
-                      # For token level, the "base block" covers all layers/heads.
-                      # Grouping applies within each head's embedding dim across all heads/layers.
-                      num_quant_blocks = num_base_blocks * num_layers * num_heads * num_feature_groups_per_embed
-                  elif self.level == "layer":
-                      # For layer level, each base block is a layer.
-                      # Grouping applies within each head's embedding dim across all heads in that layer.
-                      num_quant_blocks = num_base_blocks * num_heads * num_feature_groups_per_embed
-                  elif self.level == "head":
-                      # For head level, each base block is a head.
-                      # Grouping applies within that head's embedding dimension.
-                      num_quant_blocks = num_base_blocks * num_feature_groups_per_embed
-             else:
-                  # No grouping, the number of blocks is just the number of base blocks
-                  num_quant_blocks = num_base_blocks
+            # If grouping is enabled, multiply base blocks by the number of feature groups within each block
+            if self.use_grouping:
+                 # Ensure group_size is valid and compatible
+                 if self.group_size <= 0:
+                     raise ValueError("group_size must be positive when use_grouping is True.")
+                 if embed_size_per_head % self.group_size != 0:
+                      raise ValueError(
+                          f"Embed size per head ({embed_size_per_head}) not divisible by group_size ({self.group_size}) "
+                          f"in size calculation (Level: {self.level})"
+                      )
+                 num_feature_groups_per_embed = embed_size_per_head // self.group_size
+                 
+                 # Adjust the number of blocks based on the level and feature groups
+                 if self.level == "token":
+                     # For token level, the "base block" covers all layers/heads.
+                     # Grouping applies within each head's embedding dim across all heads/layers.
+                     num_quant_blocks = num_base_blocks * num_layers * num_heads * num_feature_groups_per_embed
+                 elif self.level == "layer":
+                     # For layer level, each base block is a layer.
+                     # Grouping applies within each head's embedding dim across all heads in that layer.
+                     num_quant_blocks = num_base_blocks * num_heads * num_feature_groups_per_embed
+                 elif self.level == "head":
+                     # For head level, each base block is a head.
+                     # Grouping applies within that head's embedding dimension.
+                     num_quant_blocks = num_base_blocks * num_feature_groups_per_embed
+            else:
+                 # No grouping, the number of blocks is just the number of base blocks
+                 num_quant_blocks = num_base_blocks
 
-             overhead_bits = num_quant_blocks * n_params_per_block * default_param_bits
+            overhead_bits = num_quant_blocks * n_params_per_block * default_param_bits
 
-             # TODO: Add overhead for adaptive quantization parameters if centroids/boundaries are stored explicitly.
-             # This depends heavily on the specific implementation of _adaptive_quantize.
-             # Assuming for now adaptive method overhead is similar to storing scale/mean per group.
+            # TODO: Add overhead for adaptive quantization parameters if centroids/boundaries are stored explicitly.
+            # This depends heavily on the specific implementation of _adaptive_quantize.
+            # Assuming for now adaptive method overhead is similar to storing scale/mean per group.
 
         # Total size is data bits + overhead bits
-        total_bits = data_bits + overhead_bits
+        total_bits = final_data_bits + overhead_bits
         return total_bits
 
 # MODIFICATION START: Add the missing build_quantizers function
