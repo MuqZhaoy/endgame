@@ -54,116 +54,162 @@ translation = {
 class GridSearch(Experiment):
     @cached_property
     def quantizer_list(self) -> list[tuple[Quantizer, Quantizer]]:
-        key_quantizer_configs = [{
-            "key_or_value_cache": ["key"],
-            "use_attentions": [False],
-            "method": ["uniform"],
-            "level": ["token", "layer", "head"],
-            "symmetric": [False],
-            "outliers_ratio": [0, 0.01],
-            "n_bits_uniform": [1, 2],
-        }, {
-            "key_or_value_cache": ["key"],
-            "use_attentions": [True],
-            "method": ["uniform"],
-            "level": ["token", "layer", "head"],
-            "symmetric": [False],
-            "outliers_ratio": [0, 0.01],
-            "last_n_attentions": [1, 5],
-            "target_quantization_error": [1.0, 3.0, 10.0, 30.0],
-            "n_bits_min": [0, 1, 2],
-            "n_bits_max": [2, 3, 4],
-            "q_norm": [300],
-        },
-        {
-            "key_or_value_cache": ["key"],
-            "use_attentions": [False],
-            "method": ["uniform"],
-            "level": ["head"],
-            "symmetric": [False],
-            "outliers_ratio": [0.01],
-            "n_bits_uniform": [4],
-            "group_size": [32, 64, None]
-        },
-        {
-            "key_or_value_cache": ["key"],
-            "use_attentions": [False],
-            "method": ["adaptive"],
-            "level": ["head"],
-            "symmetric": [False],
-            "outliers_ratio": [0.01],
-            "n_bits_uniform": [4],
-            "group_size": [None]
+
+        # --- Define Configuration Blocks (Targeting ~100 combos each) ---
+
+        # Block 1: Baseline Focus (Non-Attn, Uniform, No Grouping)
+        # Explores basic level, symmetry, outlier, bit depth effects.
+        baseline_focus = {
+            "use_attentions": [False],          # Baseline
+            "method": ["uniform"],              # Baseline
+            "group_size": [None],               # Baseline
+            "level": ["token", "layer", "head"],# (3 options)
+            "symmetric": [False, True],         # (2 options)
+            "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
+            "n_bits_uniform": [2, 4, 6, 8],     # (4 options) -> 3*2*3*4 = 72 combos
+            # --- Fixed N/A params ---
+            "last_n_attentions": [None], "target_quantization_error": [None],
+            "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
         }
-        ]
-        value_quantizer_configs = [{
-            "key_or_value_cache": ["value"],
-            "use_attentions": [False],
-            "method": ["uniform"],
-            "level": ["token", "layer", "head"],
-            "symmetric": [False],
-            "outliers_ratio": [0, 0.01],
-            "n_bits_uniform": [1, 2],
-        }, {
-            "key_or_value_cache": ["value"],
-            "use_attentions": [True],
-            "method": ["uniform"],
-            "level": ["token", "layer", "head"],
-            "symmetric": [False],
-            "outliers_ratio": [0, 0.01],
-            "last_n_attentions": [1, 5],
-            "target_quantization_error": [1.0, 3.0, 10.0, 30.0],
-            "n_bits_min": [0, 1, 2],
-            "n_bits_max": [2, 3, 4],
-            "q_norm": [None],
-        },
-        {
-            "key_or_value_cache": ["value"],
-            "use_attentions": [False],
-            "method": ["uniform"],
-            "level": ["head"],
-            "symmetric": [False],
-            "outliers_ratio": [0.01],
-            "n_bits_uniform": [4],
-            "group_size": [32, 64, None]
-        },
-        {
-            "key_or_value_cache": ["value"],
-            "use_attentions": [False],
-            "method": ["adaptive"],
-            "level": ["head"],
-            "symmetric": [False],
-            "outliers_ratio": [0.01],
-            "n_bits_uniform": [4],
-            "group_size": [None]
+
+        # Block 2: Attention-Aware Focus (Attn enabled, Uniform, No Grouping)
+        # Explores Attn parameters and interactions. Reduced level/outliers to control size.
+        attn_focus = {
+            "use_attentions": [True],           # Feature enabled
+            "method": ["uniform"],              # Baseline method
+            "group_size": [None],               # Baseline grouping
+            "level": ["layer", "head"],         # (2 options) - Focus where effect might differ more
+            "symmetric": [False, True],         # (2 options)
+            "outliers_ratio": [0.01],           # (1 option) - Reduced
+            "last_n_attentions": [1, 5],        # (2 options) - Attn param
+            "target_quantization_error": [1.0, 20.0], # (2 options) - Attn param
+            "n_bits_min": [1, 4],               # (2 options) - Attn param
+            "n_bits_max": [4, 8],               # (2 options) - Attn param
+            "q_norm": [300],                    # (1 option) - Attn param (key only)
+            # --- Fixed N/A params ---
+            "n_bits_uniform": [None],
+            # Combinations: 2 * 2 * 1 * 2 * 2 * 2 * 2 = 64 combos
         }
+
+        # Block 3: Adaptive Focus (Non-Attn, Adaptive enabled, No Grouping)
+        # Explores Adaptive method vs baseline parameters.
+        adaptive_focus = {
+            "use_attentions": [False],          # Baseline Attn
+            "method": ["adaptive"],             # Feature enabled
+            "group_size": [None],               # Baseline grouping
+            "level": ["token", "layer", "head"],# (3 options)
+            "symmetric": [False, True],         # (2 options)
+            "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
+            "n_bits_uniform": [4, 6, 8],        # (3 options) - Base bits for adaptive
+            # --- Fixed N/A params ---
+            "last_n_attentions": [None], "target_quantization_error": [None],
+            "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
+            # Combinations: 3 * 2 * 3 * 3 = 54 combos
+        }
+
+        # Block 4: Grouping Focus (Non-Attn, Uniform, Grouping enabled)
+        # Explores Grouping vs baseline parameters.
+        # !!! IMPORTANT: Adjust group_size based on your model's embed_size_per_head !!!
+        grouping_focus = {
+            "use_attentions": [False],          # Baseline Attn
+            "method": ["uniform"],              # Baseline method
+            "group_size": [32, 64, 128],        # (3 options) - Feature enabled (!!! ADJUST !!!)
+            "level": ["layer", "head"],         # (2 options) - Grouping relevant levels
+            "symmetric": [False, True],         # (2 options)
+            "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
+            "n_bits_uniform": [4, 6],           # (2 options)
+            # --- Fixed N/A params ---
+            "last_n_attentions": [None], "target_quantization_error": [None],
+            "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
+            # Combinations: 3 * 2 * 2 * 3 * 2 = 72 combos
+        }
+
+        # --- Pairwise Combination Blocks ---
+
+        # Block 5: Attention-Aware + Grouping (Attn enabled, Uniform, Grouping enabled)
+        # Explores interaction of Attn and Grouping. Reduced some params to control size.
+        # !!! IMPORTANT: Adjust group_size based on your model's embed_size_per_head !!!
+        attn_grouping = {
+            "use_attentions": [True],           # Feature 1 enabled
+            "method": ["uniform"],              # Baseline method
+            "group_size": [32, 64, 128],        # (3 options) - Feature 2 enabled (!!! ADJUST !!!)
+            "level": ["layer", "head"],         # (2 options)
+            "symmetric": [False, True],         # (2 options)
+            "outliers_ratio": [0.01],           # (1 option) - Reduced
+            "last_n_attentions": [5],           # (1 option) - Reduced
+            "target_quantization_error": [1.0, 20.0], # (2 options)
+            "n_bits_min": [1, 4],               # (2 options)
+            "n_bits_max": [4, 8],               # (2 options)
+            "q_norm": [300],                    # (1 option)
+            # --- Fixed N/A params ---
+            "n_bits_uniform": [None],
+            # Combinations: 3 * 2 * 2 * 1 * 1 * 2 * 2 * 2 * 1 = 96 combos
+        }
+
+        # Block 6: Adaptive + Grouping (Non-Attn, Adaptive enabled, Grouping enabled)
+        # Explores interaction of Adaptive and Grouping.
+        # !!! IMPORTANT: Adjust group_size based on your model's embed_size_per_head !!!
+        adaptive_grouping = {
+            "use_attentions": [False],          # Baseline Attn
+            "method": ["adaptive"],             # Feature 1 enabled
+            "group_size": [32, 64, 128],        # (3 options) - Feature 2 enabled (!!! ADJUST !!!)
+            "level": ["layer", "head"],         # (2 options)
+            "symmetric": [False, True],         # (2 options)
+            "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
+            "n_bits_uniform": [4, 6, 8],        # (3 options) - Base bits
+            # --- Fixed N/A params ---
+            "last_n_attentions": [None], "target_quantization_error": [None],
+            "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
+            # Combinations: 3 * 2 * 2 * 3 * 3 = 108 combos (Slightly over, acceptable)
+        }
+
+        # Note: Attn + Adaptive combination block is omitted due to likely implementation constraints.
+        # Note: Three-way combination (Attn + Adaptive + Grouping) is also omitted.
+
+        # --- Combine all configuration blocks ---
+        all_configs = [
+            baseline_focus,    # Block 1 (~72)
+            attn_focus,        # Block 2 (~64)
+            adaptive_focus,    # Block 3 (~54)
+            grouping_focus,    # Block 4 (~72)
+            attn_grouping,     # Block 5 (~96)
+            adaptive_grouping, # Block 6 (~108)
         ]
-        
-        key_quantizers = build_quantizers(key_quantizer_configs)
-        value_quantizers = build_quantizers(value_quantizer_configs)
-        
+
+        # --- Build Key and Value Quantizers ---
+        print("Building key quantizer configurations...")
+        key_quantizer_configs_full = [{"key_or_value_cache": ["key"], **cfg} for cfg in all_configs]
+        key_quantizers = build_quantizers(key_quantizer_configs_full)
+        print(f"Built {len(key_quantizers)} key quantizers.")
+
+        print("Building value quantizer configurations...")
+        value_quantizer_configs_full = [{"key_or_value_cache": ["value"], **cfg} for cfg in all_configs]
+        value_quantizers = build_quantizers(value_quantizer_configs_full)
+        print(f"Built {len(value_quantizers)} value quantizers.")
+
+        # --- Pair Key and Value Quantizers ---
         quantizer_pairs = []
-        
-        key_q_block1 = build_quantizers([key_quantizer_configs[0]])
-        val_q_block1 = build_quantizers([value_quantizer_configs[0]])
-        for k, v in zip(key_q_block1, val_q_block1):
-             quantizer_pairs.append((k, v))
+        if len(key_quantizers) != len(value_quantizers):
+            print(f"Warning: Mismatch in generated key ({len(key_quantizers)}) and value ({len(value_quantizers)}) quantizers. Pairing might be incorrect.")
+            min_len = min(len(key_quantizers), len(value_quantizers))
+            print(f"Pairing up to minimum length: {min_len}")
+            key_quantizers = key_quantizers[:min_len]
+            value_quantizers = value_quantizers[:min_len]
 
-        key_q_block2 = build_quantizers([key_quantizer_configs[1]])
-        val_q_block2 = build_quantizers([value_quantizer_configs[1]])
-        for k, v in zip(key_q_block2, val_q_block2):
-             quantizer_pairs.append((k, v))
+        for k, v in zip(key_quantizers, value_quantizers):
+            quantizer_pairs.append((k, v))
 
-        grouping_key_quantizers = build_quantizers([key_quantizer_configs[2]])
-        grouping_value_quantizers = build_quantizers([value_quantizer_configs[2]])
-        for k_q, v_q in zip(grouping_key_quantizers, grouping_value_quantizers):
-             quantizer_pairs.append((k_q, v_q))
-        
-        adaptive_key_quantizers = build_quantizers([key_quantizer_configs[3]])
-        adaptive_value_quantizers = build_quantizers([value_quantizer_configs[3]])
-        for k_q, v_q in zip(adaptive_key_quantizers, adaptive_value_quantizers):
-             quantizer_pairs.append((k_q, v_q))
-             
+        total_pairs = len(quantizer_pairs)
+        estimated_total = 72 + 64 + 54 + 72 + 96 + 108 # Recalculate estimate here
+        print(f"Generated {total_pairs} quantizer pairs for grid search. (Estimated: {estimated_total})" )
+        if total_pairs > 1000:
+             print("Warning: The number of configurations is large. Grid search may take a very long time.")
+        elif total_pairs == 0:
+             print("Warning: No quantizer pairs were generated. Check configuration blocks.")
+
+        # TODO: Before running, double-check group_size compatibility with your model's embed_size_per_head.
+        #       Modify the group_size lists in Blocks 4, 5, 6 if necessary.
+
         return quantizer_pairs
 
     def process_result(self, results: list[EvaluationResult]):
