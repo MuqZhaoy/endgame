@@ -563,7 +563,7 @@ class Quantizer:
         # Step 3: Calculate Empirical Quantile Boundaries
         num_quantiles = 2 ** n_bits
         # Quantile points (e.g., for n_bits=2, num_quantiles=4, points=[0, 0.25, 0.5, 0.75, 1.0])
-        quantile_points = torch.linspace(0, 1, num_quantiles + 1, device=self.device, dtype=self.dtype)
+        quantile_points = torch.linspace(0, 1, num_quantiles + 1, device=self.device, dtype=torch.float32)
 
         boundaries = None # Initialize boundaries
         boundaries_list = [] # Use list for iterative building
@@ -719,6 +719,7 @@ class Quantizer:
              dequantized_cache = dequantized_cache.squeeze(-1) # Remove added dimension
 
         # Ensure dequantized cache has the same dtype as normalization outputs
+        # --- MODIFIED: Convert to self.dtype BEFORE denormalization --- 
         dequantized_cache = dequantized_cache.to(self.dtype)
 
         # Step 7: Denormalize
