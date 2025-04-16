@@ -5,6 +5,9 @@ from matplotlib import pyplot as plt
 from functools import cached_property
 from evaluator import EvaluationResult
 from quantizer import Quantizer, build_quantizers
+import os
+import json
+import datetime
 
 params = [
     "level",
@@ -169,11 +172,11 @@ class GridSearch(Experiment):
         # --- Combine all configuration blocks ---
         all_configs = [
             baseline_focus,    # Block 1 (~72)
-            attn_focus,        # Block 2 (~64)
-            adaptive_focus,    # Block 3 (~54)
-            grouping_focus,    # Block 4 (~72)
-            attn_grouping,     # Block 5 (~96)
-            adaptive_grouping, # Block 6 (~108)
+            # attn_focus,        # Block 2 (~64)
+            # adaptive_focus,    # Block 3 (~54)
+            # grouping_focus,    # Block 4 (~72)
+            # attn_grouping,     # Block 5 (~96)
+            # adaptive_grouping, # Block 6 (~108)
         ]
 
         # --- Build Key and Value Quantizers ---
@@ -213,6 +216,33 @@ class GridSearch(Experiment):
         return quantizer_pairs
 
     def process_result(self, results: list[EvaluationResult]):
+        # Create directories if they don't exist
+        raw_dir = "experiments/raw"
+        result_dir = "experiments/result"
+        os.makedirs(raw_dir, exist_ok=True)
+        os.makedirs(result_dir, exist_ok=True)
+
+        # Save raw results with timestamp filenames
+        print(f"Saving {len(results)} raw results to {raw_dir}...")
+        for idx, ((key_quantizer, value_quantizer), result) in enumerate(zip(self.quantizer_list, results)):
+            raw_data = {
+                "key_quantizer_params": key_quantizer.params,
+                "value_quantizer_params": value_quantizer.params,
+                "evaluation_result": asdict(result)
+            }
+            # Generate timestamp filename
+            timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            # Add index just in case multiple results finish within the same microsecond
+            raw_filename = os.path.join(raw_dir, f"result_{timestamp_str}_{idx}.json") 
+            try:
+                with open(raw_filename, 'w') as f:
+                    json.dump(raw_data, f, indent=4)
+            except IOError as e:
+                 print(f"Error saving raw result to {raw_filename}: {e}")
+                 # Decide if we should continue or stop
+
+        # --- Plotting code ---
+        print("Generating plots...")
         plt.figure(figsize=(5*len(relations), 5*2*len(params)))
         for param_idx, param_name in enumerate(tqdm(params)):
             for relation_idx, (metric_name_x, metric_name_y) in enumerate(relations):
@@ -255,4 +285,7 @@ class GridSearch(Experiment):
                 ax.set_box_aspect(1)
         print(f"Rendering {2*len(params)*len(relations)} figures, it may take about 30 seconds...")
         plt.tight_layout()
-        plt.savefig("figs/grid_search_results.png", dpi=100)
+        # Save plot to the result directory
+        plot_filename = os.path.join(result_dir, "grid_search_results.png")
+        plt.savefig(plot_filename, dpi=100)
+        print(f"Plot saved to {plot_filename}")
