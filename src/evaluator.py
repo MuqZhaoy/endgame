@@ -11,6 +11,7 @@ from functools import cached_property
 from dataclasses import dataclass, asdict
 from qa_dataset import QADataset, Question
 from quantizer import Quantizer, AttentionType
+from transformers.cache_utils import Cache, DynamicCache # Import Cache classes
 
 
 @dataclass
@@ -70,70 +71,51 @@ class Evaluator:
         # Quantize key/value cache
         question_attentions = [attn[:,:,:question_len,:question_len].to(self.device) for attn in result.attentions]
         
-        # MODIFICATION START: Handle modern Cache object format
-        past_key_values = result.past_key_values # This might be a Cache object or legacy tuple
-        key_cache_list = []
-        value_cache_list = []
+        # Get the original cache object
+        original_cache: Cache = result.past_key_values
+        num_layers_in_cache = len(original_cache.key_cache)
+        original_devices = [k.device for k in original_cache.key_cache] # Store original devices per layer
         
-        if hasattr(past_key_values, 'key_cache') and hasattr(past_key_values, 'value_cache'): # Heuristic check for Cache object
-             # Assuming structure like DynamicCache where key_cache/value_cache are lists of tensors per layer
-             for k_layer, v_layer in zip(past_key_values.key_cache, past_key_values.value_cache):
-                  key_cache_list.append(k_layer[:,:,:question_len,:].to(self.device))
-                  value_cache_list.append(v_layer[:,:,:question_len,:].to(self.device))
-        elif isinstance(past_key_values, (list, tuple)): # Handle legacy tuple/list format
-             for key, value in past_key_values:
-                  key_cache_list.append(key[:,:,:question_len,:].to(self.device))
-                  value_cache_list.append(value[:,:,:question_len,:].to(self.device))
-        else:
-             raise TypeError(f"Unsupported past_key_values format: {type(past_key_values)}")
-             
+        # Extract, slice, move to compute device, and stack tensors from the original cache
+        key_cache_list = [k[:,:,:question_len,:].to(self.device) for k in original_cache.key_cache]
+        value_cache_list = [v[:,:,:question_len,:].to(self.device) for v in original_cache.value_cache]
         key_cache = torch.stack(key_cache_list) # Shape (L, B, H, S_kv, E)
         value_cache = torch.stack(value_cache_list) # Shape (L, B, H, S_kv, E)
-        # Note: Quantizer expects (B, S, L, H, E), need to handle potential shape mismatch if quantizer expects permuted input
-        # Let's assume quantizer.quantize now correctly handles (L, B, H, S, E) input based on previous fixes.
-        # If not, permute here before passing to quantizer.
-        # key_cache = key_cache.permute(1, 3, 0, 2, 4) # B, S, L, H, E
-        # value_cache = value_cache.permute(1, 3, 0, 2, 4) # B, S, L, H, E
-
+        
+        # Quantize the stacked tensors
         quantized_key_cache_stack, key_average_n_bits = self.key_quantizer.quantize(key_cache, question_attentions)
         quantized_value_cache_stack, value_average_n_bits = self.value_quantizer.quantize(value_cache, question_attentions)
 
-        # If quantizer returned permuted shape, permute back before creating cache
-        # quantized_key_cache_stack = quantized_key_cache_stack.permute(2, 0, 3, 1, 4) # L, B, H, S, E
-        # quantized_value_cache_stack = quantized_value_cache_stack.permute(2, 0, 3, 1, 4) # L, B, H, S, E
-        
-        # Create the past_key_values in the expected format for the second forward pass
-        # Using legacy format for now, as reconstructing a specific Cache object requires knowing its type
-        # TODO: Ideally, reconstruct the same Cache type as `result.past_key_values`
-        quantized_kvcache_legacy = []
-        # MODIFICATION: Ensure each layer's quantized cache is moved to the correct original device
-        is_legacy_cache = isinstance(past_key_values, (list, tuple))
-        num_layers_in_cache = len(past_key_values) if is_legacy_cache else len(past_key_values.key_cache)
+        # --- Reconstruct the Cache object with quantized tensors --- 
+        # 1. Create a new cache of the same type
+        #    We assume the cache type has a default constructor (like DynamicCache)
+        quantized_cache = type(original_cache)() 
 
+        # 2. Prepare quantized tensors on their original devices
+        quantized_key_list_on_device = []
+        quantized_value_list_on_device = []
         if num_layers_in_cache != quantized_key_cache_stack.shape[0]:
-             # Sanity check
-             raise ValueError(f"Number of layers mismatch: original cache ({num_layers_in_cache}) vs quantized stack ({quantized_key_cache_stack.shape[0]})")
-
-        for idx in range(num_layers_in_cache): # Iterate through layers
-             # Determine the original device for this specific layer
-             if is_legacy_cache:
-                  # Assuming legacy format: ((k0, v0), (k1, v1), ...)
-                  layer_device = past_key_values[idx][0].device
-             else:
-                  # Assuming Cache object format with .key_cache list
-                  layer_device = past_key_values.key_cache[idx].device
+             raise ValueError(f"Number of layers mismatch: original cache ({num_layers_in_cache}) vs quantized stack ({quantized_key_cache_stack.shape[0]}) ")
              
-             # Move the quantized tensors for this layer to its specific original device
-             quantized_kvcache_legacy.append((
-                  quantized_key_cache_stack[idx].to(layer_device),
-                  quantized_value_cache_stack[idx].to(layer_device)
-             ))
-        # Convert the list of tuples back to a tuple of tuples if the original was a tuple
-        quantized_kvcache = tuple(quantized_kvcache_legacy) if isinstance(past_key_values, tuple) else quantized_kvcache_legacy
-        # MODIFICATION END
+        for idx in range(num_layers_in_cache): # Iterate through layers
+             layer_device = original_devices[idx]
+             quantized_key_list_on_device.append(quantized_key_cache_stack[idx].to(layer_device))
+             quantized_value_list_on_device.append(quantized_value_cache_stack[idx].to(layer_device))
+             
+        # 3. Populate the new cache object
+        #    Directly assign the lists of tensors (already on correct devices)
+        quantized_cache.key_cache = quantized_key_list_on_device
+        quantized_cache.value_cache = quantized_value_list_on_device
+        #    Copy other necessary attributes like seen_tokens
+        #    Use getattr for safety in case the attribute doesn't exist on all Cache types
+        quantized_cache.seen_tokens = getattr(original_cache, 'seen_tokens', 0)
+        #    If using StaticCache, might need to handle scale_idx if it exists
+        if hasattr(original_cache, 'scale_idx'):
+             quantized_cache.scale_idx = original_cache.scale_idx
+        # --- End Cache Reconstruction --- 
 
-        # Forward after quantization using the reconstructed kv cache
-        quantized_result = model.forward(input_ids[:,question_len:], past_key_values=quantized_kvcache, use_cache=True, output_attentions=True, return_dict=True)
+        # Forward after quantization using the reconstructed Cache object
+        quantized_result = model.forward(input_ids[:,question_len:], past_key_values=quantized_cache, use_cache=True, output_attentions=True, return_dict=True)
         # Calculate log probabilities
         first_word_log_softmax = F.log_softmax(result.logits[:,question_len-1], dim=-1)
         quantized_log_softmax = F.log_softmax(quantized_result.logits, dim=-1)

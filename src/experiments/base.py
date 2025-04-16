@@ -54,7 +54,13 @@ class Experiment(abc.ABC):
         device_map = infer_auto_device_map(model, max_memory=max_memory, dtype=self.dtype, no_split_module_classes=model._no_split_modules)
         if any(x == "cpu" or x == "disk" for x in device_map.values()):
             print("Warning: CPU offloading enabled!")
-        model = AutoModelForCausalLM.from_pretrained(self.model_name, device_map=device_map, torch_dtype=self.dtype, cache_dir=hf_cache_dir).eval()
+        model = AutoModelForCausalLM.from_pretrained(
+            self.model_name, 
+            device_map=device_map, 
+            torch_dtype=self.dtype, 
+            cache_dir=hf_cache_dir, 
+            attn_implementation="eager"
+        ).eval()
         return model
 
     @cached_property
