@@ -1017,8 +1017,9 @@ class Quantizer:
         # Adjust total bits considering outliers (which use full precision)
         # Use self.outliers_ratio as the best available estimate here
         # This assumes outlier ratio is uniform across all values
-        final_data_bits = estimated_data_bits * (1.0 - self.outliers_ratio) + \
-                           (num_values_per_token * float(torch.finfo(self.dtype).bits)) * self.outliers_ratio
+        current_outliers_ratio = 0.0 if self.level == "no-quantization" else self.outliers_ratio
+        final_data_bits = estimated_data_bits * (1.0 - current_outliers_ratio) + \
+                           (num_values_per_token * float(torch.finfo(self.dtype).bits)) * current_outliers_ratio
 
         # Calculate overhead bits (for scale/mean parameters) per token
         overhead_bits = 0.0
