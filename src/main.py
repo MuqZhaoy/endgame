@@ -1,6 +1,7 @@
 import os
 import torch
 import experiments as exp
+from config import version
 
 # os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
@@ -26,7 +27,7 @@ question_count = 89
 
 
 if __name__ == "__main__":
-    exp.GridSearch(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
+    exp.GridSearch(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True, version=version).run()
     # exp.KeyValueDifference(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.KVcacheDistribution(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.AttentionInsight(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
