@@ -18,13 +18,15 @@ import os
 
 
 class Experiment(abc.ABC):
-    def __init__(self, model_name: str, dataset_name: str, dtype: torch.dtype, question_count: int, parallel: bool, verbose: bool):
+    def __init__(self, model_name: str, dataset_name: str, dtype: torch.dtype, question_count: int, parallel: bool, verbose: bool, version: str):
         self.model_name = model_name
         self.dataset_name = dataset_name
         self.dtype = dtype
         self.question_count = question_count
         self.verbose = verbose
+        self.version = version
         self.parallel = parallel and len(self.quantizer_list) > 1 and len(device_configs) > 1
+        logging.info(f"Initialized Experiment: {self.__class__.__name__} with model={model_name}, dataset={dataset_name}, parallel={self.parallel}")
 
     @cached_property
     def tokenizer(self) -> Tokenizer:
