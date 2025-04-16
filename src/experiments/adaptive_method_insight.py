@@ -10,6 +10,8 @@ from evaluator import EvaluationResult
 from quantizer import Quantizer, build_quantizers
 from matplotlib import pyplot as plt
 from dataclasses import asdict
+from functools import cached_property
+from transformers.cache_utils import DynamicCache # Import added based on code usage
 
 class AdaptiveMethodInsight(Experiment):
     """
