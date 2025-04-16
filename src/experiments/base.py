@@ -1,5 +1,9 @@
 import abc
 import torch
+import time
+import logging
+import json
+import datetime
 from dataclasses import asdict
 from quantizer import Quantizer
 from qa_dataset import QADataset
@@ -63,7 +67,17 @@ class Experiment(abc.ABC):
             result = evaluator.get_cached_result(cache_file)
         if result is None:
             model = self.get_model(worker_id)
+            logging.info(f"[Worker {worker_id+1}] Evaluating #{idx+1} (Not cached)...")
+            start_time_eval = time.time() # Record evaluation start time
             result = evaluator.evaluate(model, use_tqdm=True)
+            end_time_eval = time.time() # Record evaluation end time
+            eval_duration = end_time_eval - start_time_eval
+            logging.info(f"[Worker {worker_id+1}] Evaluation #{idx+1} finished in {eval_duration:.2f} seconds.")
+            # Check for timeout
+            if eval_duration > 300: # 300 seconds = 5 minutes
+                 logging.error(f"[Worker {worker_id+1}] Evaluation #{idx+1} EXCEEDED TIMEOUT ({eval_duration:.2f}s > 300s)! Check configuration or system.")
+                 # NOTE: This does not terminate or retry the task automatically.
+
             # MODIFICATION START: Ensure cache directory exists before writing
             if cache_file:
                 try:
@@ -79,6 +93,34 @@ class Experiment(abc.ABC):
             print(f"  Params: {evaluator.params}")
             print(f"  Results: {asdict(result)}")
             print("======================================")
+
+        # --- Save individual result immediately --- 
+        raw_dir = "experiments/raw"
+        # Ensure raw directory exists (might be redundant if created elsewhere, but safe)
+        # No need for lock here, makedirs handles existing dirs fine.
+        os.makedirs(raw_dir, exist_ok=True) 
+
+        raw_data = {
+            "key_quantizer_params": key_quantizer.params,
+            "value_quantizer_params": value_quantizer.params,
+            "evaluation_result": asdict(result)
+        }
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        # Include worker_id and idx for uniqueness
+        raw_filename = os.path.join(raw_dir, f"result_w{worker_id+1}_idx{idx}_{timestamp_str}.json")
+
+        try:
+            # Use the file_lock to ensure safe writing from multiple processes
+            with file_lock:
+                 with open(raw_filename, 'w') as f:
+                     json.dump(raw_data, f, indent=4)
+            logging.info(f"[Worker {worker_id+1}] Saved result #{idx+1} to {raw_filename}")
+        except IOError as e:
+             logging.error(f"[Worker {worker_id+1}] Error saving result #{idx+1} to {raw_filename}: {e}")
+        # --- End saving individual result ---
+
+        end_time_task = time.time() # Record task end time
+        task_duration = end_time_task - start_time_task
 
     def run(self):
         file_lock = Lock()
@@ -103,10 +145,15 @@ class Experiment(abc.ABC):
                 process.join()
         else:
             worker(0)
-        results: list[EvaluationResult] = []
-        for key_quantizer, value_quantizer in self.quantizer_list:
-            evaluator = Evaluator("cpu", version, self.model_name, self.datasets, key_quantizer, value_quantizer)
-            result = evaluator.get_cached_result(cache_file)
-            assert result is not None
-            results.append(result)
-        self.process_result(results)
+            
+        # Remove the final result collection loop, as results are saved individually by workers
+        # results: list[EvaluationResult] = []
+        # for key_quantizer, value_quantizer in self.quantizer_list:
+        #     evaluator = Evaluator("cpu", version, self.model_name, self.datasets, key_quantizer, value_quantizer)
+        #     result = evaluator.get_cached_result(cache_file)
+        #     assert result is not None
+        #     results.append(result)
+        
+        # Call process_result (which might need adaptation in subclasses)
+        # Pass an empty list or None, as results are no longer collected here.
+        self.process_result([]) # Or self.process_result(None) depending on subclass adaptation

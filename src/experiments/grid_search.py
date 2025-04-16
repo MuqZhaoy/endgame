@@ -8,6 +8,7 @@ from quantizer import Quantizer, build_quantizers
 import os
 import json
 import datetime
+import glob
 
 params = [
     "level",
@@ -215,77 +216,96 @@ class GridSearch(Experiment):
 
         return quantizer_pairs
 
-    def process_result(self, results: list[EvaluationResult]):
-        # Create directories if they don't exist
+    def process_result(self, _: list[EvaluationResult]):
+        # Define directories
         raw_dir = "experiments/raw"
         result_dir = "experiments/result"
-        os.makedirs(raw_dir, exist_ok=True)
+        # Ensure result directory exists for plot
         os.makedirs(result_dir, exist_ok=True)
+        
+        # --- Load results from JSON files --- 
+        loaded_results = []
+        json_files = glob.glob(os.path.join(raw_dir, "*.json"))
+        print(f"Found {len(json_files)} result files in {raw_dir}. Loading...")
 
-        # Save raw results with timestamp filenames
-        print(f"Saving {len(results)} raw results to {raw_dir}...")
-        for idx, ((key_quantizer, value_quantizer), result) in enumerate(zip(self.quantizer_list, results)):
-            raw_data = {
-                "key_quantizer_params": key_quantizer.params,
-                "value_quantizer_params": value_quantizer.params,
-                "evaluation_result": asdict(result)
-            }
-            # Generate timestamp filename
-            timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-            # Add index just in case multiple results finish within the same microsecond
-            raw_filename = os.path.join(raw_dir, f"result_{timestamp_str}_{idx}.json") 
+        for filepath in tqdm(json_files, desc="Loading results"):
             try:
-                with open(raw_filename, 'w') as f:
-                    json.dump(raw_data, f, indent=4)
+                with open(filepath, 'r') as f:
+                    data = json.load(f)
+                    # Validate basic structure (optional but recommended)
+                    if "key_quantizer_params" in data and \
+                       "value_quantizer_params" in data and \
+                       "evaluation_result" in data:
+                        loaded_results.append(data)
+                    else:
+                        print(f"Warning: Skipping invalid JSON file {filepath}. Missing required keys.")
+            except json.JSONDecodeError:
+                print(f"Warning: Skipping invalid JSON file {filepath}. Could not decode.")
             except IOError as e:
-                 print(f"Error saving raw result to {raw_filename}: {e}")
-                 # Decide if we should continue or stop
+                print(f"Warning: Could not read file {filepath}: {e}")
 
-        # --- Plotting code ---
-        print("Generating plots...")
+        if not loaded_results:
+            print("Error: No valid results loaded. Cannot generate plots.")
+            return
+            
+        print(f"Successfully loaded {len(loaded_results)} results.")
+        # --- Plotting code --- 
+        print("Generating plots based on loaded results...")
         plt.figure(figsize=(5*len(relations), 5*2*len(params)))
-        for param_idx, param_name in enumerate(tqdm(params)):
+        for param_idx, param_name in enumerate(tqdm(params, desc="Generating plots")):
             for relation_idx, (metric_name_x, metric_name_y) in enumerate(relations):
                 key_x, key_y, value_x, value_y = {}, {}, {}, {}
-                for (key_quantizers, value_quantizers), result in zip(self.quantizer_list, results):
-                    result = asdict(result)
-                    if param_name in key_quantizers.params:
-                        key_param_data = key_quantizers.params[param_name]
+                # Iterate over loaded data instead of quantizer_list/results zip
+                for loaded_data in loaded_results:
+                    key_params = loaded_data["key_quantizer_params"]
+                    value_params = loaded_data["value_quantizer_params"]
+                    result_dict = loaded_data["evaluation_result"]
+                    
+                    # Check if the parameter exists in the respective quantizer params
+                    if param_name in key_params:
+                        key_param_data = key_params[param_name]
                         if key_param_data not in key_x:
                             key_x[key_param_data] = []
-                        key_x[key_param_data].append(result[metric_name_x])
-                        if key_param_data not in key_y:
                             key_y[key_param_data] = []
-                        key_y[key_param_data].append(result[metric_name_y])
-                    if param_name in value_quantizers.params:
-                        value_param_data = value_quantizers.params[param_name]
+                        key_x[key_param_data].append(result_dict[metric_name_x])
+                        key_y[key_param_data].append(result_dict[metric_name_y])
+                        
+                    if param_name in value_params:
+                        value_param_data = value_params[param_name]
                         if value_param_data not in value_x:
                             value_x[value_param_data] = []
-                        value_x[value_param_data].append(result[metric_name_x])
-                        if value_param_data not in value_y:
                             value_y[value_param_data] = []
-                        value_y[value_param_data].append(result[metric_name_y])
+                        value_x[value_param_data].append(result_dict[metric_name_x])
+                        value_y[value_param_data].append(result_dict[metric_name_y])
+                        
+                # --- Rest of plotting logic remains the same ---
                 ax = plt.subplot(2*len(params), len(relations), (2*param_idx) * len(relations) + (relation_idx+1))
-                for label in key_x:
+                for label in sorted(key_x.keys()): # Sort keys for consistent legend order
                     ax.scatter(key_x[label], key_y[label], label=label)
                 if len(key_x) > 0:
                     ax.legend()
-                ax.set_title(f"{translation[param_name]} (Key)")
-                ax.set_xlabel(translation[metric_name_x])
-                ax.set_ylabel(translation[metric_name_y])
+                ax.set_title(f"{translation.get(param_name, param_name)} (Key)") # Use .get for safety
+                ax.set_xlabel(translation.get(metric_name_x, metric_name_x))
+                ax.set_ylabel(translation.get(metric_name_y, metric_name_y))
                 ax.set_box_aspect(1)
+                
                 ax = plt.subplot(2*len(params), len(relations), (2*param_idx+1) * len(relations) + (relation_idx+1))
-                for label in value_x:
+                for label in sorted(value_x.keys()): # Sort keys for consistent legend order
                     ax.scatter(value_x[label], value_y[label], label=label)
                 if len(value_x) > 0:
                     ax.legend()
-                ax.set_title(f"{translation[param_name]} (Value)")
-                ax.set_xlabel(translation[metric_name_x])
-                ax.set_ylabel(translation[metric_name_y])
+                ax.set_title(f"{translation.get(param_name, param_name)} (Value)") # Use .get for safety
+                ax.set_xlabel(translation.get(metric_name_x, metric_name_x))
+                ax.set_ylabel(translation.get(metric_name_y, metric_name_y))
                 ax.set_box_aspect(1)
+                
         print(f"Rendering {2*len(params)*len(relations)} figures, it may take about 30 seconds...")
         plt.tight_layout()
         # Save plot to the result directory
         plot_filename = os.path.join(result_dir, "grid_search_results.png")
-        plt.savefig(plot_filename, dpi=100)
-        print(f"Plot saved to {plot_filename}")
+        try:
+            plt.savefig(plot_filename, dpi=100)
+            print(f"Plot saved to {plot_filename}")
+        except Exception as e:
+             print(f"Error saving plot to {plot_filename}: {e}")
+        plt.close() # Close the figure to free memory
