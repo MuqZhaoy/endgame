@@ -361,12 +361,21 @@ class Quantizer:
 
             if method == "minmax":
                  abs_masked = torch.abs(masked_input)
-                 # nanmax equivalent: replace nan with -inf before max
-                 abs_max = torch.where(torch.isnan(abs_masked), -torch.inf, abs_masked).max(dim=norm_dims, keepdim=True).values
+                 # Iterative reduction for max across multiple dimensions
+                 abs_max_val = torch.where(torch.isnan(abs_masked), -torch.inf, abs_masked)
+                 if norm_dims: # Check if norm_dims is not empty
+                      for d in sorted(norm_dims, reverse=True):
+                           if d < abs_max_val.dim() and d >= -abs_max_val.dim():
+                                abs_max_val = abs_max_val.max(dim=d, keepdim=True).values
+                           else:
+                               print(f"Warning: Dimension {d} out of range for shape {abs_max_val.shape} in symmetric minmax normalization.")
+                 # else: no reduction if norm_dims is empty
+                 abs_max = abs_max_val
+
                  # Handle case where all values in the block/group were NaN (abs_max is -inf)
-                 abs_max = torch.where(torch.isinf(abs_max), torch.tensor(0.0, device=self.device, dtype=self.dtype), abs_max)
-                 # Avoid division by zero for scale if n_bits=0 (shouldn't happen with checks, but safe)
-                 denominator = torch.clamp(torch.tensor(2**n_bits, dtype=self.dtype, device=self.device), min=1)
+                 abs_max = torch.where(torch.isinf(abs_max) & (abs_max < 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), abs_max) # Check for -inf specifically
+                 # Use max(1, ...) to avoid potential issues with n_bits=0
+                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=self.dtype, device=self.device), min=1.0)
                  scale_value = 2 * abs_max / denominator
             elif method == "std":
                  # Manual nanstd: var = nansum((x - nanmean)^2) / (N_valid - 1)
@@ -386,12 +395,31 @@ class Quantizer:
             mean_value = torch.nansum(masked_input, dim=norm_dims, keepdim=True) / num_valid_clamped
 
             if method == "minmax":
-                 # nanmax/nanmin equivalents
-                 max_value = torch.where(torch.isnan(masked_input), -torch.inf, masked_input).max(dim=norm_dims, keepdim=True).values
-                 min_value = torch.where(torch.isnan(masked_input), torch.inf, masked_input).min(dim=norm_dims, keepdim=True).values
-                 max_value = torch.where(torch.isinf(max_value), torch.tensor(0.0, device=self.device, dtype=self.dtype), max_value)
-                 min_value = torch.where(torch.isinf(min_value), torch.tensor(0.0, device=self.device, dtype=self.dtype), min_value)
-                 denominator = torch.clamp(torch.tensor(2**n_bits, dtype=self.dtype, device=self.device), min=1)
+                 # Iterative reduction for max/min across multiple dimensions
+                 max_val_iter = torch.where(torch.isnan(masked_input), -torch.inf, masked_input)
+                 min_val_iter = torch.where(torch.isnan(masked_input), torch.inf, masked_input)
+
+                 if norm_dims: # Check if norm_dims is not empty
+                      for d in sorted(norm_dims, reverse=True):
+                           if d < max_val_iter.dim() and d >= -max_val_iter.dim():
+                                max_val_iter = max_val_iter.max(dim=d, keepdim=True).values
+                           else:
+                               print(f"Warning: Dimension {d} out of range for shape {max_val_iter.shape} in non-symmetric minmax normalization (max).")
+                           if d < min_val_iter.dim() and d >= -min_val_iter.dim():
+                                min_val_iter = min_val_iter.min(dim=d, keepdim=True).values
+                           else:
+                               print(f"Warning: Dimension {d} out of range for shape {min_val_iter.shape} in non-symmetric minmax normalization (min).")
+                 # else: no reduction if norm_dims is empty
+
+                 max_value = max_val_iter
+                 min_value = min_val_iter
+
+                 # Handle cases where all values were NaN
+                 max_value = torch.where(torch.isinf(max_value) & (max_value < 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), max_value) # Handle -inf
+                 min_value = torch.where(torch.isinf(min_value) & (min_value > 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), min_value) # Handle +inf
+
+                 # Use max(1, ...) to avoid potential issues with n_bits=0
+                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=self.dtype, device=self.device), min=1.0)
                  scale_value = (max_value - min_value) / denominator
             elif method == "std":
                  # Variance calculation uses the mean_value already calculated
