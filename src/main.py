@@ -16,13 +16,13 @@ model_name = "meta-llama/Llama-2-7b-hf"
 # model_name = "facebook/opt-30b"
 # model_name = "facebook/opt-66b"
 
-dataset_name = "Rowan/hellaswag"
+# dataset_name = "Rowan/hellaswag"
 # dataset_name = "math_qa"
 # dataset_name = "piqa"
-# dataset_name = "truthful_qa"
+dataset_name = "truthful_qa"
 
 dtype = torch.float16
-question_count = 3
+question_count = 13
 
 
 if __name__ == "__main__":
