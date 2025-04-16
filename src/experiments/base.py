@@ -32,9 +32,9 @@ class Experiment(abc.ABC):
     def get_model(self, worker_id: int) -> CausalLM:
         # --- MODIFICATION START: Build max_memory map for ALL configured GPUs ---
         full_max_memory = {}
-        # Slightly reduce available memory per GPU to leave headroom for activations/OS etc.
-        # Adjust "23GB" if needed based on observation.
-        available_gb_per_gpu = "23GB"
+        # Slightly reduce available memory per GPU to leave more headroom.
+        # Try reducing from 23GB further. Start with 22GB.
+        available_gb_per_gpu = "22GB"
         for i in range(len(device_configs)):
             full_max_memory[i] = available_gb_per_gpu
         # Keep large CPU memory for potential offloading
