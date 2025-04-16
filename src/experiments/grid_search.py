@@ -119,9 +119,9 @@ class GridSearch(Experiment):
             "method": ["uniform"],              # Baseline method
             "group_size": [32, 64, 128],        # (3 options) - Feature enabled (!!! ADJUST !!!)
             "level": ["layer", "head"],         # (2 options) - Grouping relevant levels
-            "symmetric": [False, True],         # (2 options)
-            "outliers_ratio": [0, 0.01, 0.05],  # (3 options)
-            "n_bits_uniform": [4, 6],           # (2 options)
+            "symmetric": [False],         # (2 options)
+            "outliers_ratio": [0.05],  # (3 options)
+            "n_bits_uniform": [8],           # (2 options)
             # --- Fixed N/A params ---
             "last_n_attentions": [None], "target_quantization_error": [None],
             "n_bits_min": [None], "n_bits_max": [None], "q_norm": [None],
@@ -173,9 +173,9 @@ class GridSearch(Experiment):
         # --- Combine all configuration blocks ---
         all_configs = [
             # baseline_focus,    # Block 1 (~24)
-            attn_focus,        # Block 2 (~64)
+            # attn_focus,        # Block 2 (~64)
             # adaptive_focus,    # Block 3 (~54)
-            # grouping_focus,    # Block 4 (~72)
+            grouping_focus,    # Block 4 (~72)
             # attn_grouping,     # Block 5 (~96)
             # adaptive_grouping, # Block 6 (~108)
         ]
