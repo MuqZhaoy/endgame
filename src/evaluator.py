@@ -11,6 +11,7 @@ from functools import cached_property
 from dataclasses import dataclass, asdict
 from qa_dataset import QADataset, Question
 from quantizer import Quantizer, AttentionType
+from transformers.cache_utils import Cache, DynamicCache
 
 
 @dataclass
@@ -102,34 +103,59 @@ class Evaluator:
         # quantized_key_cache_stack = quantized_key_cache_stack.permute(2, 0, 3, 1, 4) # L, B, H, S, E
         # quantized_value_cache_stack = quantized_value_cache_stack.permute(2, 0, 3, 1, 4) # L, B, H, S, E
         
-        # Create the past_key_values in the expected format for the second forward pass
-        # Using legacy format for now, as reconstructing a specific Cache object requires knowing its type
-        # TODO: Ideally, reconstruct the same Cache type as `result.past_key_values`
-        quantized_kvcache_legacy = []
-        # MODIFICATION: Ensure each layer's quantized cache is moved to the correct original device
-        is_legacy_cache = isinstance(past_key_values, (list, tuple))
-        num_layers_in_cache = len(past_key_values) if is_legacy_cache else len(past_key_values.key_cache)
+        # MODIFICATION START: Reconstruct past_key_values in the ORIGINAL format
+        quantized_kvcache: Optional[Cache | tuple[tuple[torch.Tensor]]] = None
+
+        is_dynamic_cache = isinstance(past_key_values, DynamicCache)
+        is_legacy_cache = isinstance(past_key_values, (list, tuple)) # Keep this check for older transformers or edge cases
+        num_layers_in_cache = 0
+        if is_dynamic_cache:
+             num_layers_in_cache = len(past_key_values.key_cache)
+        elif is_legacy_cache:
+             num_layers_in_cache = len(past_key_values)
+        else: # Might be another Cache type or unsupported
+             # Attempt to get length generically, might fail
+             try:
+                  num_layers_in_cache = len(past_key_values.key_cache) if hasattr(past_key_values, 'key_cache') else len(past_key_values)
+             except Exception:
+                  raise TypeError(f"Cannot determine number of layers for past_key_values type: {type(past_key_values)}")
 
         if num_layers_in_cache != quantized_key_cache_stack.shape[0]:
              # Sanity check
-             raise ValueError(f"Number of layers mismatch: original cache ({num_layers_in_cache}) vs quantized stack ({quantized_key_cache_stack.shape[0]})")
+             raise ValueError(f"Number of layers mismatch: original cache ({num_layers_in_cache}) vs quantized stack ({quantized_key_cache_stack.shape[0]}) - Cache Type: {type(past_key_values)}")
 
+        # Prepare lists for the new cache
+        new_key_cache_list = []
+        new_value_cache_list = []
         for idx in range(num_layers_in_cache): # Iterate through layers
-             # Determine the original device for this specific layer
-             if is_legacy_cache:
-                  # Assuming legacy format: ((k0, v0), (k1, v1), ...)
-                  layer_device = past_key_values[idx][0].device
-             else:
-                  # Assuming Cache object format with .key_cache list
-                  layer_device = past_key_values.key_cache[idx].device
-             
-             # Move the quantized tensors for this layer to its specific original device
-             quantized_kvcache_legacy.append((
-                  quantized_key_cache_stack[idx].to(layer_device),
-                  quantized_value_cache_stack[idx].to(layer_device)
-             ))
-        # Convert the list of tuples back to a tuple of tuples if the original was a tuple
-        quantized_kvcache = tuple(quantized_kvcache_legacy) if isinstance(past_key_values, tuple) else quantized_kvcache_legacy
+            # Determine the original device for this specific layer
+            layer_device: Optional[torch.device] = None
+            if is_dynamic_cache:
+                layer_device = past_key_values.key_cache[idx].device
+            elif is_legacy_cache:
+                layer_device = past_key_values[idx][0].device
+            else: # Fallback for other Cache types or error
+                 try:
+                      layer_device = past_key_values.key_cache[idx].device
+                 except Exception:
+                      raise TypeError(f"Could not determine layer device for past_key_values type: {type(past_key_values)}")
+            
+            # Append the quantized tensors for this layer to the list, on the correct device
+            new_key_cache_list.append(quantized_key_cache_stack[idx].to(layer_device))
+            new_value_cache_list.append(quantized_value_cache_stack[idx].to(layer_device))
+
+        # Now construct the final cache in the original format
+        if is_dynamic_cache:
+             quantized_kvcache = DynamicCache(key_cache=new_key_cache_list, value_cache=new_value_cache_list)
+        elif is_legacy_cache:
+             # Reconstruct legacy tuple format
+             quantized_kvcache_legacy = list(zip(new_key_cache_list, new_value_cache_list))
+             quantized_kvcache = tuple(quantized_kvcache_legacy) # Convert list of tuples to tuple of tuples
+        else:
+             # If it's another Cache type, we might need specific handling.
+             # For now, raise an error if it wasn't DynamicCache or legacy.
+             # TODO: Add support for other Cache types if necessary (e.g., StaticCache)
+             raise TypeError(f"Unsupported cache type for reconstruction: {type(past_key_values)}. Only DynamicCache and legacy tuples currently supported.")
         # MODIFICATION END
 
         # Forward after quantization using the reconstructed kv cache
