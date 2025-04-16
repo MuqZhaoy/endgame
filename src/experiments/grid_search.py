@@ -5,6 +5,8 @@ from matplotlib import pyplot as plt
 from functools import cached_property
 from evaluator import EvaluationResult
 from quantizer import Quantizer, build_quantizers
+import os
+import json
 
 params = [
     "level",
@@ -167,6 +169,24 @@ class GridSearch(Experiment):
         return quantizer_pairs
 
     def process_result(self, results: list[EvaluationResult]):
+        # Create directories if they don't exist
+        raw_dir = "experiments/raw"
+        result_dir = "experiments/result"
+        os.makedirs(raw_dir, exist_ok=True)
+        os.makedirs(result_dir, exist_ok=True)
+
+        # Save raw results
+        for idx, ((key_quantizer, value_quantizer), result) in enumerate(zip(self.quantizer_list, results)):
+            raw_data = {
+                "key_quantizer_params": key_quantizer.params,
+                "value_quantizer_params": value_quantizer.params,
+                "evaluation_result": asdict(result)
+            }
+            raw_filename = os.path.join(raw_dir, f"result_{idx}.json")
+            with open(raw_filename, 'w') as f:
+                json.dump(raw_data, f, indent=4)
+
+        # --- Plotting code ---
         plt.figure(figsize=(5*len(relations), 5*2*len(params)))
         for param_idx, param_name in enumerate(tqdm(params)):
             for relation_idx, (metric_name_x, metric_name_y) in enumerate(relations):
@@ -209,4 +229,7 @@ class GridSearch(Experiment):
                 ax.set_box_aspect(1)
         print(f"Rendering {2*len(params)*len(relations)} figures, it may take about 30 seconds...")
         plt.tight_layout()
-        plt.savefig("figs/grid_search_results.png", dpi=100)
+        # Save plot to the result directory
+        plot_filename = os.path.join(result_dir, "grid_search_results.png")
+        plt.savefig(plot_filename, dpi=100)
+        print(f"Plot saved to {plot_filename}")
