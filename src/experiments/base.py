@@ -96,38 +96,16 @@ class Experiment(abc.ABC):
             # MODIFICATION END
             with file_lock:
                 evaluator.cache_result(cache_file, result)
+        else:
+             logging.info(f"[Worker {worker_id+1}] Using cached result for evaluation #{idx+1}.")
+
+        end_time_task = time.time() # Record task end time
+        task_duration = end_time_task - start_time_task
+        logging.info(f"[Worker {worker_id+1}] Completed task #{idx+1} in {task_duration:.2f} seconds.")
         if self.verbose:
             print(f"  Params: {evaluator.params}")
             print(f"  Results: {asdict(result)}")
             print("======================================")
-
-        # --- Save individual result immediately --- 
-        raw_dir = "experiments/raw"
-        # Ensure raw directory exists (might be redundant if created elsewhere, but safe)
-        # No need for lock here, makedirs handles existing dirs fine.
-        os.makedirs(raw_dir, exist_ok=True) 
-
-        raw_data = {
-            "key_quantizer_params": key_quantizer.params,
-            "value_quantizer_params": value_quantizer.params,
-            "evaluation_result": asdict(result)
-        }
-        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        # Include worker_id and idx for uniqueness
-        raw_filename = os.path.join(raw_dir, f"result_w{worker_id+1}_idx{idx}_{timestamp_str}.json")
-
-        try:
-            # Use the file_lock to ensure safe writing from multiple processes
-            with file_lock:
-                 with open(raw_filename, 'w') as f:
-                     json.dump(raw_data, f, indent=4)
-            logging.info(f"[Worker {worker_id+1}] Saved result #{idx+1} to {raw_filename}")
-        except IOError as e:
-             logging.error(f"[Worker {worker_id+1}] Error saving result #{idx+1} to {raw_filename}: {e}")
-        # --- End saving individual result ---
-
-        end_time_task = time.time() # Record task end time
-        task_duration = end_time_task - start_time_task
 
     def run(self):
         file_lock = Lock()
@@ -153,14 +131,23 @@ class Experiment(abc.ABC):
         else:
             worker(0)
             
-        # Remove the final result collection loop, as results are saved individually by workers
-        # results: list[EvaluationResult] = []
-        # for key_quantizer, value_quantizer in self.quantizer_list:
-        #     evaluator = Evaluator("cpu", version, self.model_name, self.datasets, key_quantizer, value_quantizer)
-        #     result = evaluator.get_cached_result(cache_file)
-        #     assert result is not None
-        #     results.append(result)
+        # --- REINSTATE final result collection loop --- 
+        logging.info("All workers finished. Collecting results from cache...")
+        results: list[EvaluationResult] = []
+        for key_quantizer, value_quantizer in self.quantizer_list:
+            # Need to create a temporary evaluator just to get the cached result
+            # Device doesn't matter much here as we are only reading cache
+            evaluator = Evaluator("cpu", self.version, self.model_name, self.datasets, key_quantizer, value_quantizer)
+            result = evaluator.get_cached_result(cache_file)
+            if result is None:
+                 # This should ideally not happen if all tasks ran and cached
+                 logging.error(f"Could not find cached result for Key: {key_quantizer.params}, Value: {value_quantizer.params}. Skipping.")
+                 # Optionally, add a placeholder or raise an error
+                 # For now, we skip adding it to the results list
+            else:
+                 results.append(result)
+        logging.info(f"Collected {len(results)} results out of {len(self.quantizer_list)} expected configurations.")
+        # --- End reinstating result collection ---
         
-        # Call process_result (which might need adaptation in subclasses)
-        # Pass an empty list or None, as results are no longer collected here.
-        self.process_result([]) # Or self.process_result(None) depending on subclass adaptation
+        # Pass the collected results list to process_result
+        self.process_result(results)

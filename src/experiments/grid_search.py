@@ -216,62 +216,72 @@ class GridSearch(Experiment):
 
         return quantizer_pairs
 
-    def process_result(self, _: list[EvaluationResult]):
+    def process_result(self, results: list[EvaluationResult]):
         # Define directories
         raw_dir = "experiments/raw"
         result_dir = "experiments/result"
-        # Ensure result directory exists for plot
-        os.makedirs(result_dir, exist_ok=True)
+        os.makedirs(raw_dir, exist_ok=True) # Ensure raw dir exists
+        os.makedirs(result_dir, exist_ok=True) # Ensure result dir exists
         
-        # --- Load results from JSON files --- 
-        loaded_results = []
-        json_files = glob.glob(os.path.join(raw_dir, "*.json"))
-        print(f"Found {len(json_files)} result files in {raw_dir}. Loading...")
+        # --- Combine results with parameters and save to a single JSON --- 
+        all_run_data = []
+        if len(self.quantizer_list) != len(results):
+             print(f"Warning: Mismatch between number of quantizer pairs ({len(self.quantizer_list)}) and collected results ({len(results)}). Saving only matched results.")
+             # Proceed with the minimum length if there's a mismatch due to skipped errors
+             min_len = min(len(self.quantizer_list), len(results))
+             quantizer_pairs_to_save = self.quantizer_list[:min_len]
+             results_to_save = results[:min_len]
+        else:
+             quantizer_pairs_to_save = self.quantizer_list
+             results_to_save = results
 
-        for filepath in tqdm(json_files, desc="Loading results"):
-            try:
-                with open(filepath, 'r') as f:
-                    data = json.load(f)
-                    # Validate basic structure (optional but recommended)
-                    if "key_quantizer_params" in data and \
-                       "value_quantizer_params" in data and \
-                       "evaluation_result" in data:
-                        loaded_results.append(data)
-                    else:
-                        print(f"Warning: Skipping invalid JSON file {filepath}. Missing required keys.")
-            except json.JSONDecodeError:
-                print(f"Warning: Skipping invalid JSON file {filepath}. Could not decode.")
-            except IOError as e:
-                print(f"Warning: Could not read file {filepath}: {e}")
+        for (key_quantizer, value_quantizer), result in zip(quantizer_pairs_to_save, results_to_save):
+            run_data = {
+                "key_quantizer_params": key_quantizer.params,
+                "value_quantizer_params": value_quantizer.params,
+                "evaluation_result": asdict(result)
+            }
+            all_run_data.append(run_data)
 
-        if not loaded_results:
-            print("Error: No valid results loaded. Cannot generate plots.")
+        if not all_run_data:
+            print("Error: No results to save or plot.")
             return
             
-        print(f"Successfully loaded {len(loaded_results)} results.")
+        # Generate timestamp filename for the combined JSON
+        timestamp_str = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        combined_filename = os.path.join(raw_dir, f"grid_search_all_results_{timestamp_str}.json")
+        
+        print(f"Saving {len(all_run_data)} combined results to {combined_filename}...")
+        try:
+            with open(combined_filename, 'w') as f:
+                json.dump(all_run_data, f, indent=4)
+            print(f"Successfully saved combined results.")
+        except IOError as e:
+            print(f"Error saving combined results to {combined_filename}: {e}")
+            # Decide if we should still proceed with plotting
+
         # --- Plotting code --- 
-        print("Generating plots based on loaded results...")
+        # Use the originally zipped data for plotting, accessing results from the input list
+        print("Generating plots...")
         plt.figure(figsize=(5*len(relations), 5*2*len(params)))
         for param_idx, param_name in enumerate(tqdm(params, desc="Generating plots")):
             for relation_idx, (metric_name_x, metric_name_y) in enumerate(relations):
                 key_x, key_y, value_x, value_y = {}, {}, {}, {}
-                # Iterate over loaded data instead of quantizer_list/results zip
-                for loaded_data in loaded_results:
-                    key_params = loaded_data["key_quantizer_params"]
-                    value_params = loaded_data["value_quantizer_params"]
-                    result_dict = loaded_data["evaluation_result"]
+                # Iterate over the original quantizer list and results list passed in
+                for (key_quantizer, value_quantizer), result in zip(self.quantizer_list, results): # Use input results
+                    result_dict = asdict(result) # Convert EvaluationResult to dict
                     
                     # Check if the parameter exists in the respective quantizer params
-                    if param_name in key_params:
-                        key_param_data = key_params[param_name]
+                    if param_name in key_quantizer.params:
+                        key_param_data = key_quantizer.params[param_name]
                         if key_param_data not in key_x:
                             key_x[key_param_data] = []
                             key_y[key_param_data] = []
                         key_x[key_param_data].append(result_dict[metric_name_x])
                         key_y[key_param_data].append(result_dict[metric_name_y])
                         
-                    if param_name in value_params:
-                        value_param_data = value_params[param_name]
+                    if param_name in value_quantizer.params:
+                        value_param_data = value_quantizer.params[param_name]
                         if value_param_data not in value_x:
                             value_x[value_param_data] = []
                             value_y[value_param_data] = []
