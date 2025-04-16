@@ -373,9 +373,10 @@ class Quantizer:
                  abs_max = abs_max_val
 
                  # Handle case where all values in the block/group were NaN (abs_max is -inf)
-                 abs_max = torch.where(torch.isinf(abs_max) & (abs_max < 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), abs_max) # Check for -inf specifically
+                 # Use float32 for replacement tensor and original_device
+                 abs_max = torch.where(torch.isinf(abs_max) & (abs_max < 0), torch.tensor(0.0, device=self.device, dtype=torch.float32), abs_max) # Check for -inf specifically
                  # Use max(1, ...) to avoid potential issues with n_bits=0
-                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=self.dtype, device=self.device), min=1.0)
+                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=torch.float32, device=self.device), min=1.0)
                  scale_value = 2 * abs_max / denominator
             elif method == "std":
                  # Manual nanstd: var = nansum((x - nanmean)^2) / (N_valid - 1)
@@ -415,11 +416,12 @@ class Quantizer:
                  min_value = min_val_iter
 
                  # Handle cases where all values were NaN
-                 max_value = torch.where(torch.isinf(max_value) & (max_value < 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), max_value) # Handle -inf
-                 min_value = torch.where(torch.isinf(min_value) & (min_value > 0), torch.tensor(0.0, device=self.device, dtype=self.dtype), min_value) # Handle +inf
+                 # Use float32 for replacement tensor and original_device
+                 max_value = torch.where(torch.isinf(max_value) & (max_value < 0), torch.tensor(0.0, device=self.device, dtype=torch.float32), max_value) # Handle -inf
+                 min_value = torch.where(torch.isinf(min_value) & (min_value > 0), torch.tensor(0.0, device=self.device, dtype=torch.float32), min_value) # Handle +inf
 
                  # Use max(1, ...) to avoid potential issues with n_bits=0
-                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=self.dtype, device=self.device), min=1.0)
+                 denominator = torch.clamp(torch.tensor(2.0**max(1, n_bits), dtype=torch.float32, device=self.device), min=1.0)
                  scale_value = (max_value - min_value) / denominator
             elif method == "std":
                  # Variance calculation uses the mean_value already calculated
