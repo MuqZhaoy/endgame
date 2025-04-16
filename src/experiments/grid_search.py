@@ -88,7 +88,7 @@ class GridSearch(Experiment):
             "last_n_attentions": [1, 5],        # (2 options) - Attn param
             "target_quantization_error": [1.0, 20.0], # (2 options) - Attn param
             "n_bits_min": [1, 4],               # (2 options) - Attn param
-            "n_bits_max": [4, 8],               # (2 options) - Attn param
+            "n_bits_max": [4, 6, 8],               # (2 options) - Attn param
             "q_norm": [300],                    # (1 option) - Attn param (key only)
             # --- Fixed N/A params ---
             "n_bits_uniform": [None],
@@ -173,8 +173,8 @@ class GridSearch(Experiment):
         # --- Combine all configuration blocks ---
         all_configs = [
             # baseline_focus,    # Block 1 (~24)
-            # attn_focus,        # Block 2 (~64)
-            adaptive_focus,    # Block 3 (~54)
+            attn_focus,        # Block 2 (~64)
+            # adaptive_focus,    # Block 3 (~54)
             # grouping_focus,    # Block 4 (~72)
             # attn_grouping,     # Block 5 (~96)
             # adaptive_grouping, # Block 6 (~108)

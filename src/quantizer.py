@@ -212,11 +212,48 @@ class Quantizer:
             attentions = attentions[:, :, :, -self.last_n_attentions:, :]
             # attentions.shape: (n_layer, n_batch, n_head, last_n_attentions, seq_len)
             attentions = attentions.permute(1, 4, 0, 2, 3)
-            # attentions.shape: (n_batch, seq_len, n_layer, n_head, last_n_attentions)
+            # attentions.shape: (n_batch, seq_len, n_layer, n_q_head, last_n_attentions)
+
+            # --- START GQA/MQA Handling ---
+            n_q_head = attentions.shape[3]
+            n_kv_head = cache.shape[3] # Get kv_head dimension from cache shape (B, S, L, n_kv_head, E)
+
+            if n_q_head != n_kv_head:
+                if n_q_head % n_kv_head == 0:
+                    num_groups = n_q_head // n_kv_head
+                    # Reshape attentions to group queries: (B, S, L, num_kv_head, num_groups, last_n)
+                    attentions = attentions.view(
+                        attentions.shape[0], # B
+                        attentions.shape[1], # S
+                        attentions.shape[2], # L
+                        n_kv_head,           # num_kv_head
+                        num_groups,          # num_groups
+                        attentions.shape[4]  # last_n
+                    )
+                    # Aggregate attentions within each group (take max along group dim)
+                    attentions = attentions.amax(dim=4) # Now shape (B, S, L, n_kv_head, last_n)
+                    # Update n_q_head for consistency in subsequent code if it were used, though it isn't needed now
+                    # n_q_head = n_kv_head # Shape now matches KV heads
+                else:
+                    # Heads are not cleanly divisible - this indicates a configuration mismatch
+                    raise ValueError(
+                        f"Attention Q heads ({n_q_head}) must be divisible by KV heads ({n_kv_head}) "
+                        f"for GQA/MQA processing in attention-aware value quantization."
+                    )
+            # --- END GQA/MQA Handling ---
+            # Now attentions shape is (n_batch, seq_len, n_layer, n_kv_head, last_n_attentions)
+
             attentions = attentions.amax(dim=self.quantize_dims)
-            # attentions.shape: (n_batch, seq_len) or (n_batch, seq_len, n_layer) or (n_batch, seq_len, n_layer, n_head)
+            # attentions.shape depends on level, but head dim matches cache:
+            # e.g., (n_batch, seq_len) or (n_batch, seq_len, n_layer) or (n_batch, seq_len, n_layer, n_kv_head)
+            
+            # Ensure max_error calculation uses compatible shapes
+            # Note: max_error needs to broadcast with scale_value later. 
+            # scale_value shape depends on level, calculated from cache.
+            # attentions shape after amax should match the shape required for max_error.
             max_error = math.sqrt(12.0 / seq_len) * self.target_quantization_error / attentions
-            # max_error.shape: (n_batch, seq_len) or (n_batch, seq_len, n_layer) or (n_batch, seq_len, n_layer, n_head)
+            # max_error shape should now match scale_value shape (depending on level)
+
         cache = torch.masked.masked_tensor(cache, torch.logical_not(outlier_mask))
         # NOTE: PyTorch's bug: https://github.com/pytorch/pytorch/issues/115624
         quantize_dims = [x + len(cache.shape) for x in self.quantize_dims]

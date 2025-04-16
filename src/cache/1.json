@@ -1,0 +1,2114 @@
+[
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7528089887640449, 
+            "accuracy_confidence": 0.08962306726499314, 
+            "answer_log_probability": -2.0089719309921446, 
+            "quantization_error": 0.009819405802180258, 
+            "key_quantization_error": 0.017976739433374297, 
+            "value_quantization_error": 0.0016620721709862184, 
+            "attention_error": 9.580651360951113e-05, 
+            "logit_error": 0.4475070224719101, 
+            "average_n_bits": 6.0, 
+            "key_average_n_bits": 6.0, 
+            "value_average_n_bits": 6.0, 
+            "average_size": 786464.0, 
+            "key_average_size": 786464.0, 
+            "value_average_size": 786464.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7191011235955056, 
+            "accuracy_confidence": 0.09337509414887486, 
+            "answer_log_probability": -2.1837286206265833, 
+            "quantization_error": 0.14496466818820225, 
+            "key_quantization_error": 0.26405591643258425, 
+            "value_quantization_error": 0.025873419943820225, 
+            "attention_error": 0.0005861789490399736, 
+            "logit_error": 2.489477264747191, 
+            "average_n_bits": 4.0, 
+            "key_average_n_bits": 4.0, 
+            "value_average_n_bits": 4.0, 
+            "average_size": 524320.0, 
+            "key_average_size": 524320.0, 
+            "value_average_size": 524320.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.24719101123595505, 
+            "accuracy_confidence": 0.08962306726499314, 
+            "answer_log_probability": -5.729374845754457, 
+            "quantization_error": 0.7060005102264747, 
+            "key_quantization_error": 1.235033356741573, 
+            "value_quantization_error": 0.1769676637113764, 
+            "attention_error": 0.003046899971165014, 
+            "logit_error": 19.52589536516854, 
+            "average_n_bits": 2.0, 
+            "key_average_n_bits": 2.0, 
+            "value_average_n_bits": 2.0, 
+            "average_size": 262176.0, 
+            "key_average_size": 262176.0, 
+            "value_average_size": 262176.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9830208642832512, 
+            "quantization_error": 0.0006303201230724206, 
+            "key_quantization_error": 0.0011517278264077861, 
+            "value_quantization_error": 0.00010891241973705507, 
+            "attention_error": 1.1107706454362762e-05, 
+            "logit_error": 0.1363208642166652, 
+            "average_n_bits": 8.0, 
+            "key_average_n_bits": 8.0, 
+            "value_average_n_bits": 8.0, 
+            "average_size": 1048608.0, 
+            "key_average_size": 1048608.0, 
+            "value_average_size": 1048608.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.449438202247191, 
+            "accuracy_confidence": 0.10334729098508715, 
+            "answer_log_probability": -2.769295085382077, 
+            "quantization_error": 0.2760365518291345, 
+            "key_quantization_error": 0.5162312368328652, 
+            "value_quantization_error": 0.035841866825403794, 
+            "attention_error": 0.0010532929112067383, 
+            "logit_error": 7.539830582865169, 
+            "average_n_bits": 2.14, 
+            "key_average_n_bits": 2.14, 
+            "value_average_n_bits": 2.14, 
+            "average_size": 280526.08, 
+            "key_average_size": 280526.08, 
+            "value_average_size": 280526.08
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7640449438202247, 
+            "accuracy_confidence": 0.08821352263131366, 
+            "answer_log_probability": -2.021907088133294, 
+            "quantization_error": 0.021389875519141722, 
+            "key_quantization_error": 0.04064684235647823, 
+            "value_quantization_error": 0.002132908681805214, 
+            "attention_error": 0.00016204163097263723, 
+            "logit_error": 0.5722217345505618, 
+            "average_n_bits": 4.119999999999999, 
+            "key_average_n_bits": 4.119999999999999, 
+            "value_average_n_bits": 4.119999999999999, 
+            "average_size": 540048.6399999999, 
+            "key_average_size": 540048.6399999999, 
+            "value_average_size": 540048.6399999999
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9842579387682526, 
+            "quantization_error": 0.001393286699659369, 
+            "key_quantization_error": 0.002650850274589624, 
+            "value_quantization_error": 0.00013572312472911362, 
+            "attention_error": 1.4783228548725e-05, 
+            "logit_error": 0.043163256698779844, 
+            "average_n_bits": 6.1000000000000005, 
+            "key_average_n_bits": 6.1000000000000005, 
+            "value_average_n_bits": 6.1000000000000005, 
+            "average_size": 799571.2000000001, 
+            "key_average_size": 799571.2000000001, 
+            "value_average_size": 799571.2000000001
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9809360095622848, 
+            "quantization_error": 0.00011937069089225168, 
+            "key_quantization_error": 0.00023014223977421106, 
+            "value_quantization_error": 8.599142010292311e-06, 
+            "attention_error": 9.659175457579367e-07, 
+            "logit_error": 0.002055661062176308, 
+            "average_n_bits": 8.079999999999998, 
+            "key_average_n_bits": 8.079999999999998, 
+            "value_average_n_bits": 8.079999999999998, 
+            "average_size": 1059093.7599999998, 
+            "key_average_size": 1059093.7599999998, 
+            "value_average_size": 1059093.7599999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -2.1006470914853304, 
+            "quantization_error": 0.08053263117758076, 
+            "key_quantization_error": 0.14141777124297752, 
+            "value_quantization_error": 0.019647491112183987, 
+            "attention_error": 0.00040010061491741226, 
+            "logit_error": 1.8692064606741574, 
+            "average_n_bits": 2.6999999999999997, 
+            "key_average_n_bits": 2.6999999999999997, 
+            "value_average_n_bits": 2.6999999999999997, 
+            "average_size": 353926.39999999997, 
+            "key_average_size": 353926.39999999997, 
+            "value_average_size": 353926.39999999997
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -2.0017315685227257, 
+            "quantization_error": 0.00465009453591336, 
+            "key_quantization_error": 0.008242660693908006, 
+            "value_quantization_error": 0.0010575283779187148, 
+            "attention_error": 5.3753448503740716e-05, 
+            "logit_error": 0.35917886455407305, 
+            "average_n_bits": 4.6, 
+            "key_average_n_bits": 4.6, 
+            "value_average_n_bits": 4.6, 
+            "average_size": 602963.2, 
+            "key_average_size": 602963.2, 
+            "value_average_size": 602963.2
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9812698992313509, 
+            "quantization_error": 0.0002927378322301286, 
+            "key_quantization_error": 0.0005195623033502129, 
+            "value_quantization_error": 6.591336111004432e-05, 
+            "attention_error": 3.4130565570981316e-06, 
+            "logit_error": 0.016607177391480862, 
+            "average_n_bits": 6.499999999999998, 
+            "key_average_n_bits": 6.499999999999998, 
+            "value_average_n_bits": 6.499999999999998, 
+            "average_size": 851999.9999999998, 
+            "key_average_size": 851999.9999999998, 
+            "value_average_size": 851999.9999999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9810783283321365, 
+            "quantization_error": 1.903598228197419e-05, 
+            "key_quantization_error": 3.3940492051371026e-05, 
+            "value_quantization_error": 4.131472512577357e-06, 
+            "attention_error": 2.0715125491110127e-07, 
+            "logit_error": 0.0007697504557920306, 
+            "average_n_bits": 8.400000000000002, 
+            "key_average_n_bits": 8.400000000000002, 
+            "value_average_n_bits": 8.400000000000002, 
+            "average_size": 1101036.8000000003, 
+            "key_average_size": 1101036.8000000003, 
+            "value_average_size": 1101036.8000000003
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.23595505617977527, 
+            "accuracy_confidence": 0.08821352263131364, 
+            "answer_log_probability": -5.735188584796527, 
+            "quantization_error": 0.716808533400632, 
+            "key_quantization_error": 1.2493196980337078, 
+            "value_quantization_error": 0.18429736876755617, 
+            "attention_error": 0.003324712658028924, 
+            "logit_error": 20.394575140449437, 
+            "average_n_bits": 2.0, 
+            "key_average_n_bits": 2.0, 
+            "value_average_n_bits": 2.0, 
+            "average_size": 262160.0, 
+            "key_average_size": 262160.0, 
+            "value_average_size": 262160.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.6629213483146067, 
+            "accuracy_confidence": 0.09821044854972441, 
+            "answer_log_probability": -2.2651093831425184, 
+            "quantization_error": 0.15593239430631145, 
+            "key_quantization_error": 0.2806245610955056, 
+            "value_quantization_error": 0.031240227517117275, 
+            "attention_error": 0.0006340004378155376, 
+            "logit_error": 3.2114202949438204, 
+            "average_n_bits": 4.0, 
+            "key_average_n_bits": 4.0, 
+            "value_average_n_bits": 4.0, 
+            "average_size": 524304.0, 
+            "key_average_size": 524304.0, 
+            "value_average_size": 524304.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7528089887640449, 
+            "accuracy_confidence": 0.08962306726499314, 
+            "answer_log_probability": -2.010184358933595, 
+            "quantization_error": 0.010648861360014155, 
+            "key_quantization_error": 0.019273822227220856, 
+            "value_quantization_error": 0.0020239004928074527, 
+            "attention_error": 9.879034556699603e-05, 
+            "logit_error": 0.45601491178019665, 
+            "average_n_bits": 6.0, 
+            "key_average_n_bits": 6.0, 
+            "value_average_n_bits": 6.0, 
+            "average_size": 786448.0, 
+            "key_average_size": 786448.0, 
+            "value_average_size": 786448.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9833562639083897, 
+            "quantization_error": 0.0006775681892137849, 
+            "key_quantization_error": 0.0012255250737908182, 
+            "value_quantization_error": 0.00012961130463675166, 
+            "attention_error": 8.171361483884662e-06, 
+            "logit_error": 0.03415422761038448, 
+            "average_n_bits": 8.0, 
+            "key_average_n_bits": 8.0, 
+            "value_average_n_bits": 8.0, 
+            "average_size": 1048592.0, 
+            "key_average_size": 1048592.0, 
+            "value_average_size": 1048592.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.48314606741573035, 
+            "accuracy_confidence": 0.10382076030972091, 
+            "answer_log_probability": -2.8135104393675583, 
+            "quantization_error": 0.29935283875197505, 
+            "key_quantization_error": 0.5624204485603933, 
+            "value_quantization_error": 0.03628522894355688, 
+            "attention_error": 0.0011249701126237934, 
+            "logit_error": 7.237205933988764, 
+            "average_n_bits": 2.14, 
+            "key_average_n_bits": 2.14, 
+            "value_average_n_bits": 2.14, 
+            "average_size": 280510.08, 
+            "key_average_size": 280510.08, 
+            "value_average_size": 280510.08
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7415730337078652, 
+            "accuracy_confidence": 0.09095088873500105, 
+            "answer_log_probability": -2.023500784811511, 
+            "quantization_error": 0.02439732497997498, 
+            "key_quantization_error": 0.04663051648086376, 
+            "value_quantization_error": 0.0021641334790862008, 
+            "attention_error": 0.00018159231024511744, 
+            "logit_error": 0.5930230644311798, 
+            "average_n_bits": 4.119999999999999, 
+            "key_average_n_bits": 4.119999999999999, 
+            "value_average_n_bits": 4.119999999999999, 
+            "average_size": 540032.6399999999, 
+            "key_average_size": 540032.6399999999, 
+            "value_average_size": 540032.6399999999
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9839637389817544, 
+            "quantization_error": 0.0015472769737243652, 
+            "key_quantization_error": 0.002956883291180214, 
+            "value_quantization_error": 0.00013767065626851628, 
+            "attention_error": 1.7320527956726846e-05, 
+            "logit_error": 0.043129224455758425, 
+            "average_n_bits": 6.1000000000000005, 
+            "key_average_n_bits": 6.1000000000000005, 
+            "value_average_n_bits": 6.1000000000000005, 
+            "average_size": 799555.2000000001, 
+            "key_average_size": 799555.2000000001, 
+            "value_average_size": 799555.2000000001
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.981290114185102, 
+            "quantization_error": 9.879670786053946e-05, 
+            "key_quantization_error": 0.00018888243128744404, 
+            "value_quantization_error": 8.710984433634897e-06, 
+            "attention_error": 1.0719208904866423e-06, 
+            "logit_error": 0.0023769367946667617, 
+            "average_n_bits": 8.079999999999998, 
+            "key_average_n_bits": 8.079999999999998, 
+            "value_average_n_bits": 8.079999999999998, 
+            "average_size": 1059077.7599999998, 
+            "key_average_size": 1059077.7599999998, 
+            "value_average_size": 1059077.7599999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -2.0999371990202547, 
+            "quantization_error": 0.08184180098972964, 
+            "key_quantization_error": 0.14398261938202248, 
+            "value_quantization_error": 0.019700982597436797, 
+            "attention_error": 0.00040903407033909573, 
+            "logit_error": 1.8649490870786516, 
+            "average_n_bits": 2.6999999999999997, 
+            "key_average_n_bits": 2.6999999999999997, 
+            "value_average_n_bits": 2.6999999999999997, 
+            "average_size": 353910.39999999997, 
+            "key_average_size": 353910.39999999997, 
+            "value_average_size": 353910.39999999997
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -2.0026026706675286, 
+            "quantization_error": 0.0047475595152779914, 
+            "key_quantization_error": 0.008433567004257373, 
+            "value_quantization_error": 0.0010615520262986086, 
+            "attention_error": 5.492768930585197e-05, 
+            "logit_error": 0.34354152036516855, 
+            "average_n_bits": 4.6, 
+            "key_average_n_bits": 4.6, 
+            "value_average_n_bits": 4.6, 
+            "average_size": 602947.2, 
+            "key_average_size": 602947.2, 
+            "value_average_size": 602947.2
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9819463168929277, 
+            "quantization_error": 0.0002985127856222431, 
+            "key_quantization_error": 0.000530781370870183, 
+            "value_quantization_error": 6.624420037430323e-05, 
+            "attention_error": 3.5732649685291763e-06, 
+            "logit_error": 0.015904158688663097, 
+            "average_n_bits": 6.499999999999998, 
+            "key_average_n_bits": 6.499999999999998, 
+            "value_average_n_bits": 6.499999999999998, 
+            "average_size": 851983.9999999998, 
+            "key_average_size": 851983.9999999998, 
+            "value_average_size": 851983.9999999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "token", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9808835576394963, 
+            "quantization_error": 1.883272374613901e-05, 
+            "key_quantization_error": 3.3510534950856415e-05, 
+            "value_quantization_error": 4.154912541421612e-06, 
+            "attention_error": 2.2048277131627114e-07, 
+            "logit_error": 0.0008763704407081176, 
+            "average_n_bits": 8.400000000000002, 
+            "key_average_n_bits": 8.400000000000002, 
+            "value_average_n_bits": 8.400000000000002, 
+            "average_size": 1101020.8000000003, 
+            "key_average_size": 1101020.8000000003, 
+            "value_average_size": 1101020.8000000003
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.39325842696629215, 
+            "accuracy_confidence": 0.1014850251016691, 
+            "answer_log_probability": -4.244876360832655, 
+            "quantization_error": 0.5377855622366573, 
+            "key_quantization_error": 0.9838318556882022, 
+            "value_quantization_error": 0.09173926878511236, 
+            "attention_error": 0.0018908775547582112, 
+            "logit_error": 13.750614466292134, 
+            "average_n_bits": 2.0, 
+            "key_average_n_bits": 2.0, 
+            "value_average_n_bits": 2.0, 
+            "average_size": 263168.0, 
+            "key_average_size": 263168.0, 
+            "value_average_size": 263168.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7640449438202247, 
+            "accuracy_confidence": 0.08821352263131366, 
+            "answer_log_probability": -2.0588475394457175, 
+            "quantization_error": 0.07106296667891941, 
+            "key_quantization_error": 0.1349219847261236, 
+            "value_quantization_error": 0.007203948631715239, 
+            "attention_error": 0.00033144895615202656, 
+            "logit_error": 1.2177460059691012, 
+            "average_n_bits": 4.0, 
+            "key_average_n_bits": 4.0, 
+            "value_average_n_bits": 4.0, 
+            "average_size": 525312.0, 
+            "key_average_size": 525312.0, 
+            "value_average_size": 525312.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9925975696086957, 
+            "quantization_error": 0.015409789728314688, 
+            "key_quantization_error": 0.03031509913755267, 
+            "value_quantization_error": 0.0005044803190767096, 
+            "attention_error": 5.357218592354421e-05, 
+            "logit_error": 0.30596580933988765, 
+            "average_n_bits": 6.0, 
+            "key_average_n_bits": 6.0, 
+            "value_average_n_bits": 6.0, 
+            "average_size": 787456.0, 
+            "key_average_size": 787456.0, 
+            "value_average_size": 787456.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9872964651868532, 
+            "quantization_error": 0.01113203837630454, 
+            "key_quantization_error": 0.022193308626667838, 
+            "value_quantization_error": 7.076812594124441e-05, 
+            "attention_error": 1.708773917026734e-05, 
+            "logit_error": 0.23705960391612535, 
+            "average_n_bits": 8.0, 
+            "key_average_n_bits": 8.0, 
+            "value_average_n_bits": 8.0, 
+            "average_size": 1049600.0, 
+            "key_average_size": 1049600.0, 
+            "value_average_size": 1049600.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7415730337078652, 
+            "accuracy_confidence": 0.09095088873500105, 
+            "answer_log_probability": -1.985455383173036, 
+            "quantization_error": 0.009204702430896545, 
+            "key_quantization_error": 0.018258255519224015, 
+            "value_quantization_error": 0.00015114934256907258, 
+            "attention_error": 2.7472488163562305e-05, 
+            "logit_error": 0.06603832459181883, 
+            "average_n_bits": 6.1000000000000005, 
+            "key_average_n_bits": 6.1000000000000005, 
+            "value_average_n_bits": 6.1000000000000005, 
+            "average_size": 800563.2000000001, 
+            "key_average_size": 800563.2000000001, 
+            "value_average_size": 800563.2000000001
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.4157303370786517, 
+            "accuracy_confidence": 0.10239378457353634, 
+            "answer_log_probability": -3.24822914912622, 
+            "quantization_error": 0.35920826772625525, 
+            "key_quantization_error": 0.6829737974016854, 
+            "value_quantization_error": 0.03544273805082514, 
+            "attention_error": 0.0012874537555689221, 
+            "logit_error": 10.020826018258427, 
+            "average_n_bits": 2.14, 
+            "key_average_n_bits": 2.14, 
+            "value_average_n_bits": 2.14, 
+            "average_size": 281518.08, 
+            "key_average_size": 281518.08, 
+            "value_average_size": 281518.08
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7528089887640449, 
+            "accuracy_confidence": 0.08962306726499314, 
+            "answer_log_probability": -2.0221572051719074, 
+            "quantization_error": 0.039307449640852685, 
+            "key_quantization_error": 0.07647362183988764, 
+            "value_quantization_error": 0.002141277441817723, 
+            "attention_error": 0.0002117344293366657, 
+            "logit_error": 0.6685941889044944, 
+            "average_n_bits": 4.119999999999999, 
+            "key_average_n_bits": 4.119999999999999, 
+            "value_average_n_bits": 4.119999999999999, 
+            "average_size": 541040.6399999999, 
+            "key_average_size": 541040.6399999999, 
+            "value_average_size": 541040.6399999999
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.984385039169755, 
+            "quantization_error": 0.0069585204794165795, 
+            "key_quantization_error": 0.013894327570883077, 
+            "value_quantization_error": 2.2713387950082843e-05, 
+            "attention_error": 6.803154443087202e-06, 
+            "logit_error": 0.03445528866199965, 
+            "average_n_bits": 8.079999999999998, 
+            "key_average_n_bits": 8.079999999999998, 
+            "value_average_n_bits": 8.079999999999998, 
+            "average_size": 1060085.7599999998, 
+            "key_average_size": 1060085.7599999998, 
+            "value_average_size": 1060085.7599999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -2.11354370427782, 
+            "quantization_error": 0.08281073409519839, 
+            "key_quantization_error": 0.14594808857092698, 
+            "value_quantization_error": 0.019673379619469803, 
+            "attention_error": 0.00040184415542007833, 
+            "logit_error": 1.8909541783707866, 
+            "average_n_bits": 2.6999999999999997, 
+            "key_average_n_bits": 2.6999999999999997, 
+            "value_average_n_bits": 2.6999999999999997, 
+            "average_size": 354918.39999999997, 
+            "key_average_size": 354918.39999999997, 
+            "value_average_size": 354918.39999999997
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7640449438202247, 
+            "accuracy_confidence": 0.08821352263131366, 
+            "answer_log_probability": -1.9957225087343906, 
+            "quantization_error": 0.0050869068402922555, 
+            "key_quantization_error": 0.009107182534892908, 
+            "value_quantization_error": 0.0010666311456916037, 
+            "attention_error": 5.412168717116453e-05, 
+            "logit_error": 0.2947312258602528, 
+            "average_n_bits": 4.6, 
+            "key_average_n_bits": 4.6, 
+            "value_average_n_bits": 4.6, 
+            "average_size": 603955.2, 
+            "key_average_size": 603955.2, 
+            "value_average_size": 603955.2
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9820054004722036, 
+            "quantization_error": 0.0004261879438764594, 
+            "key_quantization_error": 0.0007852061410968224, 
+            "value_quantization_error": 6.716974665609639e-05, 
+            "attention_error": 3.5768228300501793e-06, 
+            "logit_error": 0.012442942415730338, 
+            "average_n_bits": 6.499999999999998, 
+            "key_average_n_bits": 6.499999999999998, 
+            "value_average_n_bits": 6.499999999999998, 
+            "average_size": 852991.9999999998, 
+            "key_average_size": 852991.9999999998, 
+            "value_average_size": 852991.9999999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": false, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9812549136673736, 
+            "quantization_error": 0.00011969751186585159, 
+            "key_quantization_error": 0.00023442707704694085, 
+            "value_quantization_error": 4.967946684762333e-06, 
+            "attention_error": 4.430165451564146e-07, 
+            "logit_error": 0.0020210233966955976, 
+            "average_n_bits": 8.400000000000002, 
+            "key_average_n_bits": 8.400000000000002, 
+            "value_average_n_bits": 8.400000000000002, 
+            "average_size": 1102028.8000000003, 
+            "key_average_size": 1102028.8000000003, 
+            "value_average_size": 1102028.8000000003
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.29213483146067415, 
+            "accuracy_confidence": 0.09447741675784158, 
+            "answer_log_probability": -5.804682104328955, 
+            "quantization_error": 0.6034683056091994, 
+            "key_quantization_error": 1.1032742275280898, 
+            "value_quantization_error": 0.10366238369030899, 
+            "attention_error": 0.0018908259239089622, 
+            "logit_error": 13.173850070224718, 
+            "average_n_bits": 2.0, 
+            "key_average_n_bits": 2.0, 
+            "value_average_n_bits": 2.0, 
+            "average_size": 262656.0, 
+            "key_average_size": 262656.0, 
+            "value_average_size": 262656.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -2.063515382018987, 
+            "quantization_error": 0.09182977140619514, 
+            "key_quantization_error": 0.17452077115519662, 
+            "value_quantization_error": 0.009138771657193645, 
+            "attention_error": 0.0004344359040260315, 
+            "logit_error": 1.2160452510533708, 
+            "average_n_bits": 4.0, 
+            "key_average_n_bits": 4.0, 
+            "value_average_n_bits": 4.0, 
+            "average_size": 524800.0, 
+            "key_average_size": 524800.0, 
+            "value_average_size": 524800.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7415730337078652, 
+            "accuracy_confidence": 0.09095088873500105, 
+            "answer_log_probability": -1.995301195727275, 
+            "quantization_error": 0.006007897719908296, 
+            "key_quantization_error": 0.011433976419856039, 
+            "value_quantization_error": 0.0005818190199605534, 
+            "attention_error": 5.878311362159386e-05, 
+            "logit_error": 0.20903032281425563, 
+            "average_n_bits": 6.0, 
+            "key_average_n_bits": 6.0, 
+            "value_average_n_bits": 6.0, 
+            "average_size": 786944.0, 
+            "key_average_size": 786944.0, 
+            "value_average_size": 786944.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9823275171775896, 
+            "quantization_error": 0.0003827153966667947, 
+            "key_quantization_error": 0.0007282535681563816, 
+            "value_quantization_error": 3.717722517720769e-05, 
+            "attention_error": 4.017872087071451e-06, 
+            "logit_error": 0.008035788375340152, 
+            "average_n_bits": 8.0, 
+            "key_average_n_bits": 8.0, 
+            "value_average_n_bits": 8.0, 
+            "average_size": 1049088.0, 
+            "key_average_size": 1049088.0, 
+            "value_average_size": 1049088.0
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.30337078651685395, 
+            "accuracy_confidence": 0.09550998749816371, 
+            "answer_log_probability": -3.94718851108261, 
+            "quantization_error": 0.4558182619930653, 
+            "key_quantization_error": 0.8733979985955056, 
+            "value_quantization_error": 0.038238525390625, 
+            "attention_error": 0.0013523795380351248, 
+            "logit_error": 14.30297577247191, 
+            "average_n_bits": 2.14, 
+            "key_average_n_bits": 2.14, 
+            "value_average_n_bits": 2.14, 
+            "average_size": 281006.08, 
+            "key_average_size": 281006.08, 
+            "value_average_size": 281006.08
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7528089887640449, 
+            "accuracy_confidence": 0.08962306726499314, 
+            "answer_log_probability": -2.0269086201798854, 
+            "quantization_error": 0.05643063448788075, 
+            "key_quantization_error": 0.11054426900456461, 
+            "value_quantization_error": 0.0023169999711968926, 
+            "attention_error": 0.0003001873663971933, 
+            "logit_error": 0.633081329002809, 
+            "average_n_bits": 4.119999999999999, 
+            "key_average_n_bits": 4.119999999999999, 
+            "value_average_n_bits": 4.119999999999999, 
+            "average_size": 540528.6399999999, 
+            "key_average_size": 540528.6399999999, 
+            "value_average_size": 540528.6399999999
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9844557591177283, 
+            "quantization_error": 0.0036111949534898395, 
+            "key_quantization_error": 0.007074806127655372, 
+            "value_quantization_error": 0.00014758377932430654, 
+            "attention_error": 3.4628394112158356e-05, 
+            "logit_error": 0.05968655361218399, 
+            "average_n_bits": 6.1000000000000005, 
+            "key_average_n_bits": 6.1000000000000005, 
+            "value_average_n_bits": 6.1000000000000005, 
+            "average_size": 800051.2000000001, 
+            "key_average_size": 800051.2000000001, 
+            "value_average_size": 800051.2000000001
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.01, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9811894916786363, 
+            "quantization_error": 0.00023031268226966428, 
+            "key_quantization_error": 0.0004512861873326677, 
+            "value_quantization_error": 9.339177206660924e-06, 
+            "attention_error": 2.494605069749811e-06, 
+            "logit_error": 0.0028336074914825098, 
+            "average_n_bits": 8.079999999999998, 
+            "key_average_n_bits": 8.079999999999998, 
+            "value_average_n_bits": 8.079999999999998, 
+            "average_size": 1059573.7599999998, 
+            "key_average_size": 1059573.7599999998, 
+            "value_average_size": 1059573.7599999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 2
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7640449438202247, 
+            "accuracy_confidence": 0.08821352263131366, 
+            "answer_log_probability": -2.1088733321645114, 
+            "quantization_error": 0.09196643615036867, 
+            "key_quantization_error": 0.16385127721207865, 
+            "value_quantization_error": 0.02008159508865871, 
+            "attention_error": 0.00044500672917687493, 
+            "logit_error": 1.8475794417134832, 
+            "average_n_bits": 2.6999999999999997, 
+            "key_average_n_bits": 2.6999999999999997, 
+            "value_average_n_bits": 2.6999999999999997, 
+            "average_size": 354406.39999999997, 
+            "key_average_size": 354406.39999999997, 
+            "value_average_size": 354406.39999999997
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 4
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7415730337078652, 
+            "accuracy_confidence": 0.09095088873500105, 
+            "answer_log_probability": -2.0020143892201685, 
+            "quantization_error": 0.0055995576837089625, 
+            "key_quantization_error": 0.010110747948121489, 
+            "value_quantization_error": 0.0010883674192964361, 
+            "attention_error": 6.127129361200868e-05, 
+            "logit_error": 0.3510769619030899, 
+            "average_n_bits": 4.6, 
+            "key_average_n_bits": 4.6, 
+            "value_average_n_bits": 4.6, 
+            "average_size": 603443.2, 
+            "key_average_size": 603443.2, 
+            "value_average_size": 603443.2
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 6
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9831597617247647, 
+            "quantization_error": 0.00035353892304924097, 
+            "key_quantization_error": 0.0006386510441812236, 
+            "value_quantization_error": 6.842680191725828e-05, 
+            "attention_error": 4.126052005907123e-06, 
+            "logit_error": 0.015856603558143872, 
+            "average_n_bits": 6.499999999999998, 
+            "key_average_n_bits": 6.499999999999998, 
+            "value_average_n_bits": 6.499999999999998, 
+            "average_size": 852479.9999999998, 
+            "key_average_size": 852479.9999999998, 
+            "value_average_size": 852479.9999999998
+        }
+    }, 
+    {
+        "params": {
+            "version": "2023/03/20-#02", 
+            "model_name": "meta-llama/Llama-2-7b-hf", 
+            "dataset_name": "Rowan/hellaswag", 
+            "question_count": 89, 
+            "key_quantizer": {
+                "key_or_value_cache": "key", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }, 
+            "value_quantizer": {
+                "key_or_value_cache": "value", 
+                "level": "layer", 
+                "symmetric": true, 
+                "method_name": "uniform", 
+                "outliers_ratio": 0.05, 
+                "use_attentions": false, 
+                "group_size": "disabled", 
+                "n_bits_uniform": 8
+            }
+        }, 
+        "results": {
+            "accuracy": 0.7303370786516854, 
+            "accuracy_confidence": 0.09220051790596658, 
+            "answer_log_probability": -1.9807436391968767, 
+            "quantization_error": 2.233600348569034e-05, 
+            "key_quantization_error": 4.037645425689354e-05, 
+            "value_quantization_error": 4.29555271448714e-06, 
+            "attention_error": 2.776806274156892e-07, 
+            "logit_error": 0.0010841455352440309, 
+            "average_n_bits": 8.400000000000002, 
+            "key_average_n_bits": 8.400000000000002, 
+            "value_average_n_bits": 8.400000000000002, 
+            "average_size": 1101516.8000000003, 
+            "key_average_size": 1101516.8000000003, 
+            "value_average_size": 1101516.8000000003
+        }
+    }
+]
