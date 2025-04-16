@@ -1,5 +1,7 @@
 import abc
 import torch
+import time
+import logging
 from dataclasses import asdict
 from quantizer import Quantizer
 from qa_dataset import QADataset
@@ -13,6 +15,20 @@ from transformers import AutoModelForCausalLM, AutoConfig, AutoTokenizer
 import os
 
 
+# Configure logging
+log_dir = "experiments/log"
+os.makedirs(log_dir, exist_ok=True)
+log_file = os.path.join(log_dir, "experiment.log")
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler(log_file),
+        logging.StreamHandler()  # Optionally log to console as well
+    ]
+)
+
+
 class Experiment(abc.ABC):
     def __init__(self, model_name: str, dataset_name: str, dtype: torch.dtype, question_count: int, parallel: bool, verbose: bool):
         self.model_name = model_name
@@ -21,6 +37,7 @@ class Experiment(abc.ABC):
         self.question_count = question_count
         self.verbose = verbose
         self.parallel = parallel and len(self.quantizer_list) > 1 and len(device_configs) > 1
+        logging.info(f"Initialized Experiment: {self.__class__.__name__} with model={model_name}, dataset={dataset_name}, parallel={self.parallel}")
 
     @cached_property
     def tokenizer(self) -> Tokenizer:
@@ -53,7 +70,9 @@ class Experiment(abc.ABC):
         pass
 
     def _run_single_evaluation(self, worker_id: int, task_queue: Queue, file_lock: Lock):
+        start_time_task = time.time()
         idx, key_quantizer, value_quantizer = task_queue.get(timeout=1)
+        logging.info(f"[Worker {worker_id+1}] Starting evaluation #{idx+1} (Key: {key_quantizer.params}, Value: {value_quantizer.params})")
         print(f"Running evaluation #{idx+1} on worker #{worker_id+1}...")
         device, _ = device_configs[worker_id]
         key_quantizer.set_dtype_and_device(self.dtype, device)
@@ -63,18 +82,20 @@ class Experiment(abc.ABC):
             result = evaluator.get_cached_result(cache_file)
         if result is None:
             model = self.get_model(worker_id)
+            logging.info(f"[Worker {worker_id+1}] Evaluating #{idx+1}...")
+            start_time_eval = time.time()
             result = evaluator.evaluate(model, use_tqdm=True)
-            # MODIFICATION START: Ensure cache directory exists before writing
-            if cache_file:
-                try:
-                    cache_dir = os.path.dirname(cache_file)
-                    if cache_dir: # Avoid trying to create empty dir if cache_file is just a filename
-                        os.makedirs(cache_dir, exist_ok=True)
-                except OSError as e:
-                    print(f"Warning: Could not create cache directory '{cache_dir}': {e}")
-            # MODIFICATION END
+            end_time_eval = time.time()
+            eval_duration = end_time_eval - start_time_eval
+            logging.info(f"[Worker {worker_id+1}] Evaluation #{idx+1} finished in {eval_duration:.2f} seconds.")
             with file_lock:
                 evaluator.cache_result(cache_file, result)
+        else:
+            logging.info(f"[Worker {worker_id+1}] Using cached result for evaluation #{idx+1}.")
+
+        end_time_task = time.time()
+        task_duration = end_time_task - start_time_task
+        logging.info(f"[Worker {worker_id+1}] Completed task #{idx+1} in {task_duration:.2f} seconds.")
         if self.verbose:
             print(f"  Params: {evaluator.params}")
             print(f"  Results: {asdict(result)}")
