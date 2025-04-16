@@ -63,6 +63,7 @@ class Experiment(abc.ABC):
         pass
 
     def _run_single_evaluation(self, worker_id: int, task_queue: Queue, file_lock: Lock):
+        start_time_task = time.time() # Add task start time recording
         idx, key_quantizer, value_quantizer = task_queue.get(timeout=1)
         print(f"Running evaluation #{idx+1} on worker #{worker_id+1}...")
         device, _ = device_configs[worker_id]
