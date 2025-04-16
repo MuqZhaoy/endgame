@@ -22,7 +22,7 @@ dataset_name = "Rowan/hellaswag"
 # dataset_name = "truthful_qa"
 
 dtype = torch.float16
-question_count = 13
+question_count = 97
 
 
 if __name__ == "__main__":

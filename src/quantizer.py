@@ -364,21 +364,19 @@ class Quantizer:
 
             if method == "minmax":
                  abs_masked = torch.abs(masked_input)
-                 # --- REVERT: Use iterative reduction for compatibility --- 
+                 # Iterative reduction for max across multiple dimensions
                  abs_max_val = torch.where(torch.isnan(abs_masked), -torch.inf, abs_masked)
                  if norm_dims: # Check if norm_dims is not empty
                       for d in sorted(norm_dims, reverse=True):
                            if d < abs_max_val.dim() and d >= -abs_max_val.dim():
                                 abs_max_val = abs_max_val.max(dim=d, keepdim=True).values
                            else:
-                               # This warning path might need adjustment depending on expected inputs
                                print(f"Warning: Dimension {d} out of range for shape {abs_max_val.shape} in symmetric minmax normalization.")
                  # else: no reduction if norm_dims is empty
                  abs_max = abs_max_val
-                 # --- END REVERT ---
 
                  # Handle case where all values in the block/group were NaN (abs_max is -inf)
-                 # MODIFIED: Check for -inf, use float32 and original_device
+                 # MODIFIED: Use float32 and original_device
                  abs_max = torch.where(torch.isinf(abs_max) & (abs_max < 0), torch.tensor(0.0, device=original_device, dtype=torch.float32), abs_max) # Check for -inf specifically
                  # Use max(1, ...) to avoid potential issues with n_bits=0
                  # MODIFIED: Use float32 and original_device
@@ -402,34 +400,29 @@ class Quantizer:
             mean_value = torch.nansum(masked_input, dim=norm_dims, keepdim=True) / num_valid_clamped
 
             if method == "minmax":
-                 # --- REVERT: Use iterative reduction for compatibility --- 
+                 # Iterative reduction for max/min across multiple dimensions
                  max_val_iter = torch.where(torch.isnan(masked_input), -torch.inf, masked_input)
                  min_val_iter = torch.where(torch.isnan(masked_input), torch.inf, masked_input)
-                 
+
                  if norm_dims: # Check if norm_dims is not empty
-                      # Calculate max iteratively
                       for d in sorted(norm_dims, reverse=True):
                            if d < max_val_iter.dim() and d >= -max_val_iter.dim():
                                 max_val_iter = max_val_iter.max(dim=d, keepdim=True).values
                            else:
-                               # Warning logic
                                print(f"Warning: Dimension {d} out of range for shape {max_val_iter.shape} in non-symmetric minmax normalization (max).")
-                      # Calculate min iteratively
-                      for d in sorted(norm_dims, reverse=True):
                            if d < min_val_iter.dim() and d >= -min_val_iter.dim():
                                 min_val_iter = min_val_iter.min(dim=d, keepdim=True).values
                            else:
-                               # Warning logic
                                print(f"Warning: Dimension {d} out of range for shape {min_val_iter.shape} in non-symmetric minmax normalization (min).")
                  # else: no reduction if norm_dims is empty
- 
+
                  max_value = max_val_iter
                  min_value = min_val_iter
-                 # --- END REVERT ---
 
-                 # Handle cases where all values were NaN (max_value is -inf, min_value is +inf)
-                 # MODIFIED: Check for -inf/+inf, use float32 and original_device
+                 # Handle cases where all values were NaN
+                 # MODIFIED: Use float32 and original_device
                  max_value = torch.where(torch.isinf(max_value) & (max_value < 0), torch.tensor(0.0, device=original_device, dtype=torch.float32), max_value) # Handle -inf
+                 # MODIFIED: Use float32 and original_device
                  min_value = torch.where(torch.isinf(min_value) & (min_value > 0), torch.tensor(0.0, device=original_device, dtype=torch.float32), min_value) # Handle +inf
 
                  # Use max(1, ...) to avoid potential issues with n_bits=0
