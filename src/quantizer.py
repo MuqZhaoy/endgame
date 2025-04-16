@@ -745,3 +745,44 @@ class Quantizer:
         # Total size is data bits + overhead bits
         total_bits = data_bits + overhead_bits
         return total_bits
+
+# MODIFICATION START: Add the missing build_quantizers function
+def build_quantizers(config_grid_list: list[dict[str, list]]) -> list[Quantizer]:
+    quantizer_list: list[Quantizer] = []
+    for config_grid in config_grid_list:
+        # Get keys and value lists from the config grid
+        keys = list(config_grid.keys())
+        value_lists = list(config_grid.values())
+
+        # Create all combinations of parameter values
+        for args in product(*value_lists):
+            kwargs = {k: v for k, v in zip(keys, args)}
+            # Check for potential conflicts or dependencies if needed
+            # e.g., n_bits_uniform only relevant if use_attentions=False
+            # group_size requires level != token etc. (already checked in init)
+            try:
+                 # Instantiate the quantizer
+                 quantizer = Quantizer(**kwargs)
+                 # Check for method='adaptive' and ensure _adaptive_quantize is implemented
+                 # if quantizer.method_name == 'adaptive' and not callable(getattr(quantizer, '_adaptive_quantize', None)):
+                 #      print(f"Warning: Skipping config with method='adaptive' as implementation is missing: {kwargs}")
+                 #      continue # Skip if adaptive method selected but not implemented
+
+                 # Only add if instantiation succeeds and necessary checks pass
+                 quantizer_list.append(quantizer)
+
+            except AssertionError as e:
+                 # Optionally print skipped invalid combinations due to assert checks
+                 # print(f"Skipping invalid config due to AssertionError: {kwargs} - {e}")
+                 pass
+            except ValueError as e:
+                 # Catch ValueErrors from parameter validation (e.g., group_size divisibility)
+                 # print(f"Skipping invalid config due to ValueError: {kwargs} - {e}")
+                 pass
+            except Exception as e:
+                 # Catch other unexpected errors during instantiation
+                 print(f"Error creating quantizer with config: {kwargs} - {type(e).__name__}: {e}")
+                 # Decide whether to skip or raise, currently skipping
+
+    return quantizer_list
+# MODIFICATION END
