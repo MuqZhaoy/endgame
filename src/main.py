@@ -26,11 +26,11 @@ question_count = 41
 
 
 if __name__ == "__main__":
-    # exp.GridSearch(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
+    exp.GridSearch(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.KeyValueDifference(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.KVcacheDistribution(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.AttentionInsight(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.AttentionAwareInsight(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.AdaptiveMethodInsight(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
     # exp.GroupingInsight(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
-    exp.Test(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
+    # exp.Test(model_name, dataset_name, dtype, question_count, parallel=True, verbose=True).run()
