@@ -82,7 +82,7 @@ class GridSearch(Experiment):
             "use_attentions": [True],           # Feature enabled
             "method": ["uniform"],              # Baseline method
             "group_size": [None],               # Baseline grouping
-            "level": ["layer", "head"],         # (2 options) - Focus where effect might differ more
+            "level": ["head"],         # (2 options) - Focus where effect might differ more
             "symmetric": [False, True],         # (2 options)
             "outliers_ratio": [0.01],           # (1 option) - Reduced
             "last_n_attentions": [1, 5],        # (2 options) - Attn param
@@ -172,8 +172,8 @@ class GridSearch(Experiment):
 
         # --- Combine all configuration blocks ---
         all_configs = [
-            baseline_focus,    # Block 1 (~24)
-            # attn_focus,        # Block 2 (~64)
+            # baseline_focus,    # Block 1 (~24)
+            attn_focus,        # Block 2 (~64)
             # adaptive_focus,    # Block 3 (~54)
             # grouping_focus,    # Block 4 (~72)
             # attn_grouping,     # Block 5 (~96)
