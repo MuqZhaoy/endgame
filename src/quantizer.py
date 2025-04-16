@@ -6,6 +6,7 @@ from scipy.stats import norm
 from itertools import product
 from functools import cached_property
 from typing import Literal, Optional, Any
+import logging
 
 
 AttentionType = list[torch.Tensor]
@@ -227,14 +228,17 @@ class Quantizer:
                 max_value = cache.amax(dim=quantize_dims)
                 min_value = cache.amin(dim=quantize_dims)
                 scale_value = max_value - min_value
-            assert scale_value.get_mask().all()
-            scale_value = scale_value.get_data()
-            # scale_value.shape: (n_batch, seq_len) or (n_batch, seq_len, n_layer) or (n_batch, seq_len, n_layer, n_head)
-            n_bits = torch.log2(scale_value / (2 * max_error) + 1)
-            # n_bits.shape: (n_batch, seq_len) or (n_batch, seq_len, n_layer) or (n_batch, seq_len, n_layer, n_head)
+            scale_value = scale_value.get_data() # Shape depends on level
         elif self.method_name == "normal":
             raise NotImplementedError()
-        n_bits = torch.clamp(torch.ceil(n_bits).to(torch.int64), self.n_bits_min, self.n_bits_max)
+
+        # Error line:
+        # --- DEBUG: Print shapes before division --- 
+        logging.debug(f"[_calc_quantization_bits] Level: {self.level}, Cache Type: {self.key_or_value_cache}")
+        logging.debug(f"[_calc_quantization_bits] scale_value shape: {scale_value.shape}, dtype: {scale_value.dtype}")
+        logging.debug(f"[_calc_quantization_bits] max_error type: {type(max_error)}, value/shape: {max_error.shape if isinstance(max_error, torch.Tensor) else max_error}")
+        # --- END DEBUG ---
+        n_bits = torch.log2(scale_value / (2 * max_error) + 1)
         # n_bits.shape: (n_batch, seq_len) or (n_batch, seq_len, n_layer) or (n_batch, seq_len, n_layer, n_head)
         # The last (last_n_attentions-1) tokens do not have enough history attentions so we do not quantize them
         if self.last_n_attentions > 1:
